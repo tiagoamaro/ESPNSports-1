@@ -636,7 +636,7 @@ class SportsScraper
 
       @entrypoints['MLB'] = {
         "LeagueID" => 4,
-        "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
+        "url" => "http://espn.go.com/mlb/scoreboard?date=20150412",
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
