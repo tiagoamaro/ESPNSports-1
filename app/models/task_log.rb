@@ -19,7 +19,20 @@
 #
 
 class TaskLog < ActiveRecord::Base
+  MAX_LOGS_NUMBER = 100
+
   belongs_to :task
 
   validates :task, presence: true
+
+  after_save :keep_max_logs
+
+  private
+
+  def keep_max_logs
+    if task.logs.count > MAX_LOGS_NUMBER
+      last_logs = task.logs.last(MAX_LOGS_NUMBER)
+      task.logs.where.not(id: last_logs).destroy_all
+    end
+  end
 end
