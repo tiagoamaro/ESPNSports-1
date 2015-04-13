@@ -636,7 +636,7 @@ class SportsScraper
 
       @entrypoints['MLB'] = {
         "LeagueID" => 10,
-        "url" => "http://espn.go.com/mlb/scoreboard?date=20130601",
+        "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
@@ -2325,7 +2325,7 @@ class SportsScraper
        ## what is provided
        ## as Attendance:\s\s\s\+(\d)
         attendance = 0
-        matches = parser.inner_html.match(/Attendance\[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
+        matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         if matches then
           attendance = matches[1].gsub(/,/, "")
         end
