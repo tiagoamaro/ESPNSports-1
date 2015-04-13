@@ -531,7 +531,7 @@ class SportsScraper
       }
 
       @entrypoints['WNBA'] = {
-        "LeagueID" => 8,
+        "LeagueID" => 6,
         "url" => "http://scores.espn.go.com/wnba/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball", 
 
@@ -558,7 +558,7 @@ class SportsScraper
         "schema" => {}      
       }
       @entrypoints['MLS'] = {
-        "LeagueID" => 9,
+        "LeagueID" => 8,
         "url" => "http://www.espnfc.us/scores?date=" + @datestr,
         "BaseURL" => "http://www.espnfc.us/",
         "FriendlyName" => "Soccer",
@@ -600,7 +600,7 @@ class SportsScraper
 
       @entrypoints['PGA'] = {
         "url" => "http://espn.go.com/golf/leaderboard",
-        "LeagueID" => 6,
+        "LeagueID" => 9,
         "FriendlyName" => "Golf",
         "LeagueName" => "PGA",
         "scorePeriods" => [
@@ -635,8 +635,8 @@ class SportsScraper
       }
 
       @entrypoints['MLB'] = {
-        "LeagueID" => 4,
-        "url" => "http://espn.go.com/mlb/scoreboard?date=20150412",
+        "LeagueID" => 10,
+        "url" => "http://espn.go.com/mlb/scoreboard?date=20130601",
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
@@ -710,7 +710,7 @@ class SportsScraper
          "schema" => {}
       }
       @entrypoints['NHL'] = {
-        "LeagueID" => 5,
+        "LeagueID" => 11,
         "url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
         "league_table" => "Players_NHL",
         "FriendlyName" => "Hockey",
@@ -2325,7 +2325,7 @@ class SportsScraper
        ## what is provided
        ## as Attendance:\s\s\s\+(\d)
         attendance = 0
-        matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
+        matches = parser.inner_html.match(/Attendance\[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         if matches then
           attendance = matches[1].gsub(/,/, "")
         end
