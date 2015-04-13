@@ -44,7 +44,7 @@ gem 'simple_form'
 
 group :development, :test do
   gem 'rspec-rails', '~> 3.0'
-  gem 'shoulda-matchers', '~> 2.8'
+  gem 'shoulda-matchers', '~> 2.8', require: false
   gem 'spring-commands-rspec', '~> 1.0'
 
   gem 'annotate', '~> 2.6.6'
