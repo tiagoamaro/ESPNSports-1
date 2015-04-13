@@ -6,11 +6,13 @@ class TaskRunnerService
   end
 
   def stop!
-    if @task.pid
+    begin
       Process.kill(9, @task.pid)
-      @task.update(pid: nil)
+    rescue => exception
+      Rails.logger.info exception.backtrace
     end
 
+    @task.update(pid: nil)
     @task.stopped!
   end
 
@@ -19,14 +21,14 @@ class TaskRunnerService
       @task.running!
 
       while @task.reload.running?
-        # log = TaskLog.create(task: self, start_time: DateTime.now, league_name: league_name)
+        @task_logger = TaskLog.create(task: @task, start_time: DateTime.now, league_name: @task.league_name)
 
         begin
-          @task.scraper.constantize.new(league_name).start
+          @task.scraper.constantize.new(league_name, @task_logger).start
         rescue => exception
           Rails.logger.info exception.backtrace
         ensure
-          # log.update(end_time: DateTime.now)
+          @task_logger.update(end_time: DateTime.now)
           sleep(@task.interval)
         end
       end

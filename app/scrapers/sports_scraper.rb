@@ -152,10 +152,11 @@ end
 ## given the 
 ## league 
 class SportsScraper 
-    def initialize(league)
+    def initialize(league, task_logger)
       @entrypoints = {}
 
       @datestr = self.make_time()
+      @task_logger = task_logger
 
       @inheritors = {
         "NBA" => ['WNBA', 'NCAAB', 'NCB', 'NCAAWB', 'NCW'],
