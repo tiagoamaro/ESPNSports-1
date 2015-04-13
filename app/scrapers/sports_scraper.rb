@@ -3412,6 +3412,9 @@ class SportsScraper
            
       end
 
+      # # Save the number of matches that are in progress, or: number of games in progress:
+      @task_logger.log_games_in_progress(@to_traverse.size)
+
       @to_traverse.each { |id|
          self.parse_match(id)
       }

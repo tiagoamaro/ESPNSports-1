@@ -35,6 +35,10 @@ class TaskLog < ActiveRecord::Base
     increment!(:records_updated)
   end
 
+  def log_games_in_progress(games_in_progress)
+    update(games_in_progress: games_in_progress)
+  end
+
   private
 
   def keep_max_logs
