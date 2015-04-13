@@ -21,10 +21,10 @@ class TaskRunnerService
       @task.running!
 
       while @task.reload.running?
-        @task_logger = TaskLog.create(task: @task, start_time: DateTime.now, league_name: @task.league_name)
+        @task_logger = TaskLog.create(task: @task, start_time: DateTime.now, end_time: DateTime.now, league_name: @task.league_name)
 
         begin
-          @task.scraper.constantize.new(league_name, @task_logger).start
+          @task.scraper.constantize.new(@task.league_name, @task_logger).start
         rescue => exception
           Rails.logger.info exception.backtrace
         ensure

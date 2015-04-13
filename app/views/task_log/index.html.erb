@@ -15,7 +15,7 @@
     </tr>
   </thead>
 
-  <% @task.logs.each do |log| %>
+  <% @task.logs.order(id: :desc).each do |log| %>
     <tr>
       <td><%= log.league_name %></td>
       <td><%= log.start_time %></td>

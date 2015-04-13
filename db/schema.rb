@@ -410,9 +410,6 @@ ActiveRecord::Schema.define(version: 20150413164736) do
 
   add_index "Teams", ["LeagueID"], name: "LeagueID", using: :btree
 
-  create_table "logs_to_tasks", force: :cascade do |t|
-  end
-
   create_table "task_logs", force: :cascade do |t|
     t.integer  "task_id",           limit: 4
     t.datetime "start_time"
