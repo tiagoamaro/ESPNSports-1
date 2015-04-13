@@ -14,6 +14,7 @@
       <th>League</th>
       <th>status</th>
       <th>PID</th>
+      <th>Logs</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -26,6 +27,7 @@
         <td><%= task.league_name %></td>
         <td><%= task.status %></td>
         <td><%= task.pid %></td>
+        <td><%= link_to 'Logs', task_log_index_path(task) %></td>
         <td>
           <%= link_to 'Start', start_task_path(task), method: :put, class: 'btn btn-primary' %>
           <%= link_to 'Stop', stop_task_path(task), method: :put, class: 'btn btn-warning' %>

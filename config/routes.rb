@@ -3,6 +3,8 @@ Rails.application.routes.draw do
     member do
       put 'start'
       put 'stop'
+
+      resources :task_log, only: [:index]
     end
   end
 
