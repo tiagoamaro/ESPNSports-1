@@ -3190,6 +3190,7 @@ class SportsScraper
        
        insertStr = @dbsyntax.insert_str(@db, "Games", {
         "GameId" => game['gameId'],
+		"LeagueID" => game['LeagueID'],
         "InProgress" => game['InProgress'],
         "ESPNUrl" => game['ESPNUrl'],
         "HomeTeamId" => game['HomeTeamId'],
