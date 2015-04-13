@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150410161713) do
+ActiveRecord::Schema.define(version: 20150413154840) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,                 null: false
@@ -411,14 +411,19 @@ ActiveRecord::Schema.define(version: 20150410161713) do
   add_index "Teams", ["LeagueID"], name: "LeagueID", using: :btree
 
   create_table "tasks", force: :cascade do |t|
-    t.string   "name",        limit: 255
-    t.integer  "interval",    limit: 4,   default: 60
-    t.integer  "pid",         limit: 4
-    t.string   "league_name", limit: 255, default: "NBA"
-    t.string   "scraper",     limit: 255, default: "SportsScraper"
-    t.integer  "status",      limit: 4,   default: 0
-    t.datetime "created_at",                                        null: false
-    t.datetime "updated_at",                                        null: false
+    t.string   "name",             limit: 255
+    t.integer  "interval",         limit: 4,   default: 60
+    t.integer  "pid",              limit: 4
+    t.string   "league_name",      limit: 255, default: "NBA"
+    t.string   "scraper",          limit: 255, default: "SportsScraper"
+    t.integer  "status",           limit: 4,   default: 0
+    t.datetime "created_at",                                             null: false
+    t.datetime "updated_at",                                             null: false
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.integer  "runs",             limit: 4,   default: 0
+    t.integer  "records_updated",  limit: 4,   default: 0
+    t.integer  "records_inserted", limit: 4,   default: 0
   end
 
   add_foreign_key "PlayerStats_Baseball", "Games", column: "GameID", primary_key: "GameID", name: "GameIDBaseball"

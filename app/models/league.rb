@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: leagues
+# Table name: Leagues
 #
 #  LeagueID   :integer          not null, primary key
 #  LeagueName :string(50)
