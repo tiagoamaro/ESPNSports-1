@@ -24,31 +24,10 @@ class Task < ActiveRecord::Base
   before_destroy :stop!
 
   def stop!
-    begin
-      Process.kill(9, pid)
-      update(pid: nil)
-    rescue => exception
-      logger.info exception.backtrace
-    ensure
-      stopped!
-    end
+    TaskRunnerService.new(self).stop!
   end
 
   def run!
-    process = Spawnling.new do
-      running!
-
-      while self.reload.running?
-        begin
-          scraper.constantize.new(league_name).start
-        rescue => exception
-          logger.info exception.backtrace
-        ensure
-          sleep(interval)
-        end
-      end
-    end
-
-    update(pid: process.handle)
+    TaskRunnerService.new(self).run!
   end
 end
