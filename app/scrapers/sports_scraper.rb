@@ -164,9 +164,7 @@ class SportsScraper
       @entrypoints['NBA'] = {
           ## this should
           ## be the entry point
-         #"url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
-         ## testing
-         "url" => "http://espn.go.com/nba/scoreboard?date=20150308",
+         "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
 
          "league_table" => "Players_NBA",
          "players_table" => "Players_NBA",
@@ -512,7 +510,7 @@ class SportsScraper
       ## same as NBA
       ##
       @entrypoints['NCB'] = {
-        "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=20150329",
+        "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=" + @datestr,
         "LeagueName" => "NCB",
         "FriendlyName" => "Basketball",
         "espnSchema" => [
@@ -523,7 +521,7 @@ class SportsScraper
       
       }
       @entrypoints['NCW'] = {
-        "url" => "http://scores.espn.go.com/ncw/scoreboard?date=20150213",
+        "url" => "http://scores.espn.go.com/ncw/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball",
         ## same as NBA
         "espnSchema" => [
@@ -534,7 +532,7 @@ class SportsScraper
 
       @entrypoints['WNBA'] = {
         "LeagueID" => 8,
-        "url" => "http://scores.espn.go.com/wnba/scoreboard?date=20140502",
+        "url" => "http://scores.espn.go.com/wnba/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball", 
 
          ## same as NBA
@@ -548,7 +546,7 @@ class SportsScraper
       }
       @entrypoints['NCF'] = {
         "LeagueID" => 7,
-        "url" => "http://scores.espn.go.com/ncf/scoreboard?date=20150112",
+        "url" => "http://scores.espn.go.com/ncf/scoreboard?date=" + @datestr,
         "FriendlyName" => "Football",
         "LeagueName" => "NCF",
 
@@ -561,7 +559,7 @@ class SportsScraper
       }
       @entrypoints['MLS'] = {
         "LeagueID" => 9,
-        "url" => "http://www.espnfc.us/scores?date=20150325",
+        "url" => "http://www.espnfc.us/scores?date=" + @datestr,
         "BaseURL" => "http://www.espnfc.us/",
         "FriendlyName" => "Soccer",
         "PlayerBaseURL" => "http://www.espnfc.us/",
@@ -638,8 +636,7 @@ class SportsScraper
 
       @entrypoints['MLB'] = {
         "LeagueID" => 4,
-        "url" => "http://espn.go.com/mlb/scoreboard?date=20130601",
-        #"url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=20150325",
+        "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
@@ -714,8 +711,7 @@ class SportsScraper
       }
       @entrypoints['NHL'] = {
         "LeagueID" => 5,
-        #"url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
-        "url" => "http://scores.espn.go.com/nhl/scoreboard?date=20150325",
+        "url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
         "league_table" => "Players_NHL",
         "FriendlyName" => "Hockey",
 				"LeagueName" => "NHL",
