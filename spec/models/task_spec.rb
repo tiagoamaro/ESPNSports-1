@@ -1,3 +1,18 @@
+# == Schema Information
+#
+# Table name: tasks
+#
+#  id          :integer          not null, primary key
+#  name        :string(255)
+#  interval    :integer          default(60)
+#  pid         :integer
+#  league_name :string(255)      default("NBA")
+#  scraper     :string(255)      default("SportsScraper")
+#  status      :integer          default(0)
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#
+
 require 'rails_helper'
 
 RSpec.describe Task, type: :model do

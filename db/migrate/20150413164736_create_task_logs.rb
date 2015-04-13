@@ -5,8 +5,8 @@ class CreateTaskLogs < ActiveRecord::Migration
 
       t.datetime :start_time
       t.datetime :end_time
-      t.integer :records_updated
-      t.integer :records_inserted
+      t.integer :records_updated, default: 0
+      t.integer :records_inserted, default: 0
       t.integer :games_in_progress
       t.string :league_name
 

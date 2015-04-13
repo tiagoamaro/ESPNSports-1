@@ -1,3 +1,23 @@
+# == Schema Information
+#
+# Table name: task_logs
+#
+#  id                :integer          not null, primary key
+#  task_id           :integer
+#  start_time        :datetime
+#  end_time          :datetime
+#  records_updated   :integer          default(0)
+#  records_inserted  :integer          default(0)
+#  games_in_progress :integer
+#  league_name       :string(255)
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#
+# Indexes
+#
+#  index_task_logs_on_task_id  (task_id)
+#
+
 require 'rails_helper'
 
 RSpec.describe TaskLog, type: :model do
@@ -27,6 +47,26 @@ RSpec.describe TaskLog, type: :model do
         expect(task.logs).to match_array([task_log])
         expect(another_task.logs).to match_array([last_another_task_log])
       end
+    end
+  end
+
+  describe '.log_record_insert' do
+    let(:task_log) { create(:task_log) }
+
+    it 'increments the records_inserted attribute' do
+      expect(task_log.records_inserted).to eq(0)
+      task_log.log_record_insert
+      expect(task_log.records_inserted).to eq(1)
+    end
+  end
+
+  describe '.log_record_update' do
+    let(:task_log) { create(:task_log) }
+
+    it 'increments the records_updated attribute' do
+      expect(task_log.records_updated).to eq(0)
+      task_log.log_record_update
+      expect(task_log.records_updated).to eq(1)
     end
   end
 end

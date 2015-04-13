@@ -417,12 +417,12 @@ ActiveRecord::Schema.define(version: 20150413164736) do
     t.integer  "task_id",           limit: 4
     t.datetime "start_time"
     t.datetime "end_time"
-    t.integer  "records_updated",   limit: 4
-    t.integer  "records_inserted",  limit: 4
+    t.integer  "records_updated",   limit: 4,   default: 0
+    t.integer  "records_inserted",  limit: 4,   default: 0
     t.integer  "games_in_progress", limit: 4
     t.string   "league_name",       limit: 255
-    t.datetime "created_at",                    null: false
-    t.datetime "updated_at",                    null: false
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
   end
 
   add_index "task_logs", ["task_id"], name: "index_task_logs_on_task_id", using: :btree
