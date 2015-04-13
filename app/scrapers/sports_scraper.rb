@@ -164,9 +164,7 @@ class SportsScraper
       @entrypoints['NBA'] = {
           ## this should
           ## be the entry point
-         #"url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
-         ## testing
-         "url" => "http://espn.go.com/nba/scoreboard?date=20150308",
+         "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
 
          "league_table" => "Players_NBA",
          "players_table" => "Players_NBA",
@@ -512,7 +510,7 @@ class SportsScraper
       ## same as NBA
       ##
       @entrypoints['NCB'] = {
-        "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=20150329",
+        "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=" + @datestr,
         "LeagueName" => "NCB",
         "FriendlyName" => "Basketball",
         "espnSchema" => [
@@ -523,7 +521,7 @@ class SportsScraper
       
       }
       @entrypoints['NCW'] = {
-        "url" => "http://scores.espn.go.com/ncw/scoreboard?date=20150213",
+        "url" => "http://scores.espn.go.com/ncw/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball",
         ## same as NBA
         "espnSchema" => [
@@ -533,8 +531,8 @@ class SportsScraper
       }
 
       @entrypoints['WNBA'] = {
-        "LeagueID" => 8,
-        "url" => "http://scores.espn.go.com/wnba/scoreboard?date=20140502",
+        "LeagueID" => 6,
+        "url" => "http://scores.espn.go.com/wnba/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball", 
 
          ## same as NBA
@@ -548,7 +546,7 @@ class SportsScraper
       }
       @entrypoints['NCF'] = {
         "LeagueID" => 7,
-        "url" => "http://scores.espn.go.com/ncf/scoreboard?date=20150112",
+        "url" => "http://scores.espn.go.com/ncf/scoreboard?date=" + @datestr,
         "FriendlyName" => "Football",
         "LeagueName" => "NCF",
 
@@ -560,8 +558,8 @@ class SportsScraper
         "schema" => {}      
       }
       @entrypoints['MLS'] = {
-        "LeagueID" => 9,
-        "url" => "http://www.espnfc.us/scores?date=20150325",
+        "LeagueID" => 8,
+        "url" => "http://www.espnfc.us/scores?date=" + @datestr,
         "BaseURL" => "http://www.espnfc.us/",
         "FriendlyName" => "Soccer",
         "PlayerBaseURL" => "http://www.espnfc.us/",
@@ -602,7 +600,7 @@ class SportsScraper
 
       @entrypoints['PGA'] = {
         "url" => "http://espn.go.com/golf/leaderboard",
-        "LeagueID" => 6,
+        "LeagueID" => 9,
         "FriendlyName" => "Golf",
         "LeagueName" => "PGA",
         "scorePeriods" => [
@@ -637,9 +635,8 @@ class SportsScraper
       }
 
       @entrypoints['MLB'] = {
-        "LeagueID" => 4,
+        "LeagueID" => 10,
         "url" => "http://espn.go.com/mlb/scoreboard?date=20130601",
-        #"url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=20150325",
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
@@ -713,9 +710,8 @@ class SportsScraper
          "schema" => {}
       }
       @entrypoints['NHL'] = {
-        "LeagueID" => 5,
-        #"url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
-        "url" => "http://scores.espn.go.com/nhl/scoreboard?date=20150325",
+        "LeagueID" => 11,
+        "url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
         "league_table" => "Players_NHL",
         "FriendlyName" => "Hockey",
 				"LeagueName" => "NHL",
@@ -2329,7 +2325,7 @@ class SportsScraper
        ## what is provided
        ## as Attendance:\s\s\s\+(\d)
         attendance = 0
-        matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
+        matches = parser.inner_html.match(/Attendance\[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         if matches then
           attendance = matches[1].gsub(/,/, "")
         end
@@ -3194,6 +3190,7 @@ class SportsScraper
        
        insertStr = @dbsyntax.insert_str(@db, "Games", {
         "GameId" => game['gameId'],
+		"LeagueID" => game['LeagueID'],
         "InProgress" => game['InProgress'],
         "ESPNUrl" => game['ESPNUrl'],
         "HomeTeamId" => game['HomeTeamId'],
