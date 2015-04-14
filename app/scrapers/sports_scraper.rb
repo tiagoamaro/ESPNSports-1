@@ -2817,9 +2817,9 @@ class SportsScraper
       })
 
       @db.query(updateStr)
+      @task_logger.log_record_update
+
       ## insert team stats
-
-
       if not game['InProgress'] == -1 then
         if not self.is_singular_league() then
           self.insert_or_update_team(game['gameId'], game['teams']['home'])
@@ -2894,6 +2894,7 @@ class SportsScraper
         "ModifiedDate" => modifiedDate
       })
       @db.query(q)
+      @task_logger.log_record_insert
     end
 
    
@@ -2913,6 +2914,7 @@ class SportsScraper
 
       q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
 
+      @task_logger.log_record_insert
       return @db.query(q)
     end
 
@@ -2929,6 +2931,8 @@ class SportsScraper
 
       data = self.get_league_player_schema(player, true)
       q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
+
+      @task_logger.log_record_update
 			return @db.query(q)
     end
 
@@ -2944,6 +2948,8 @@ class SportsScraper
            "createdDate" => createdDate, 
            "modifiedDate" => modifiedDate
       })
+
+      @task_logger.log_record_insert
       return @db.query(q)
     end
 
@@ -3113,6 +3119,7 @@ class SportsScraper
       q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
       @db.query(q)
+      @task_logger.log_record_insert
     end
 
     def update_game_team(gameId, team)
@@ -3120,6 +3127,7 @@ class SportsScraper
       q = @dbsyntax.update_str(@db, self.get_game_team_table(), "GameID", gameId, data)
 
       @db.query(q)
+      @task_logger.log_record_update
     end
 
     ## these need to insert
@@ -3202,7 +3210,10 @@ class SportsScraper
         "CreatedDate" => createdDate,
         "StartDate" => game['StartDate'] 
        })
+
        @db.query(insertStr)
+       @task_logger.log_record_insert
+
        ##insert the team stats
        if not game['InProgress'] == -1 then
 
