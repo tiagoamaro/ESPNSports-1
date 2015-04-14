@@ -2786,6 +2786,10 @@ class SportsScraper
 		end
 
     def insert_or_update_game(game)
+     if game['InProgress'] == 1
+      @task_logger.log_games_in_progress
+     end
+
      if not self.game_id_exists(game['gameId']) then
       return self.insert_game(game)
      else
@@ -3432,9 +3436,6 @@ class SportsScraper
         end
            
       end
-
-      # # Save the number of matches that are in progress, or: number of games in progress:
-      @task_logger.log_games_in_progress(@to_traverse.size)
 
       @to_traverse.each { |id|
          self.parse_match(id)

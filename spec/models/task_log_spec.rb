@@ -73,10 +73,10 @@ RSpec.describe TaskLog, type: :model do
   describe '.log_games_in_progress' do
     let(:task_log) { create(:task_log, games_in_progress: 10) }
 
-    it 'updates the games_in_progress attribute' do
+    it 'increments the games_in_progress attribute' do
       expect(task_log.games_in_progress).to eq(10)
-      task_log.log_games_in_progress(40)
-      expect(task_log.games_in_progress).to eq(40)
+      task_log.log_games_in_progress
+      expect(task_log.games_in_progress).to eq(11)
     end
   end
 end
