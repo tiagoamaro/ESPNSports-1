@@ -152,10 +152,11 @@ end
 ## given the 
 ## league 
 class SportsScraper 
-    def initialize(league)
+    def initialize(league, task_logger)
       @entrypoints = {}
 
       @datestr = self.make_time()
+      @task_logger = task_logger
 
       @inheritors = {
         "NBA" => ['WNBA', 'NCAAB', 'NCB', 'NCAAWB', 'NCW'],
@@ -3410,6 +3411,9 @@ class SportsScraper
         end
            
       end
+
+      # # Save the number of matches that are in progress, or: number of games in progress:
+      @task_logger.log_games_in_progress(@to_traverse.size)
 
       @to_traverse.each { |id|
          self.parse_match(id)

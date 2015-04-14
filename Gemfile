@@ -43,6 +43,12 @@ gem 'bootstrap-sass', '~> 3.3.4'
 gem 'simple_form'
 
 group :development, :test do
+  gem 'rspec-rails', '~> 3.2.1'
+  gem 'shoulda-matchers', '~> 2.8.0', require: false
+  gem 'spring-commands-rspec', '~> 1.0.4'
+  gem 'factory_girl_rails', '~> 4.5.0'
+  gem 'database_cleaner', '~> 1.4.1'
+
   gem 'annotate', '~> 2.6.6'
 
   gem 'pry'
@@ -58,4 +64,3 @@ group :development, :test do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
 end
-

@@ -13,21 +13,11 @@
 #  updated_at  :datetime         not null
 #
 
-class Task < ActiveRecord::Base
-  enum status: { stopped: 0, running: 1 }
+require 'rails_helper'
 
-  has_many :logs, dependent: :destroy, class_name: 'TaskLog'
+RSpec.describe Task, type: :model do
+  it { is_expected.to have_many(:logs).dependent(:destroy).class_name('TaskLog') }
 
-  validates :interval, numericality: { only_integer: true, greater_than: 0 }
-  validates :league_name, presence: true
-
-  before_destroy :stop!
-
-  def stop!
-    TaskRunnerService.new(self).stop!
-  end
-
-  def run!
-    TaskRunnerService.new(self).run!
-  end
+  it { is_expected.to validate_numericality_of(:interval).only_integer.is_greater_than(0) }
+  it { is_expected.to validate_presence_of(:league_name) }
 end

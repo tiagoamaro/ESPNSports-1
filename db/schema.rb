@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150410161713) do
+ActiveRecord::Schema.define(version: 20150413164736) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,                 null: false
@@ -410,6 +410,20 @@ ActiveRecord::Schema.define(version: 20150410161713) do
 
   add_index "Teams", ["LeagueID"], name: "LeagueID", using: :btree
 
+  create_table "task_logs", force: :cascade do |t|
+    t.integer  "task_id",           limit: 4
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.integer  "records_updated",   limit: 4,   default: 0
+    t.integer  "records_inserted",  limit: 4,   default: 0
+    t.integer  "games_in_progress", limit: 4
+    t.string   "league_name",       limit: 255
+    t.datetime "created_at",                                null: false
+    t.datetime "updated_at",                                null: false
+  end
+
+  add_index "task_logs", ["task_id"], name: "index_task_logs_on_task_id", using: :btree
+
   create_table "tasks", force: :cascade do |t|
     t.string   "name",        limit: 255
     t.integer  "interval",    limit: 4,   default: 60
@@ -447,4 +461,5 @@ ActiveRecord::Schema.define(version: 20150410161713) do
   add_foreign_key "TeamStats_Hockey", "Teams", column: "TeamID", primary_key: "TeamID", name: "TeamIDHockeyTeam"
   add_foreign_key "TeamStats_Soccer", "Leagues", column: "LeagueID", primary_key: "LeagueID", name: "LeagueIDSoccerTeam"
   add_foreign_key "TeamStats_Soccer", "Teams", column: "TeamID", primary_key: "TeamID", name: "TeamIDSoccerTeam"
+  add_foreign_key "task_logs", "tasks"
 end
