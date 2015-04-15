@@ -2331,7 +2331,7 @@ class SportsScraper
           matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         end
 
-        puts "Attendance: " + attendance
+        puts "Attendance: #{attendance}"
                      
         if matches then
           attendance = matches[1].gsub(/,/, "")
