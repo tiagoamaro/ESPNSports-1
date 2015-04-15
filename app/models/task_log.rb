@@ -8,7 +8,7 @@
 #  end_time          :datetime
 #  records_updated   :integer          default(0)
 #  records_inserted  :integer          default(0)
-#  games_in_progress :integer
+#  games_in_progress :integer          default(0)
 #  league_name       :string(255)
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
