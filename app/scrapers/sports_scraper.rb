@@ -97,7 +97,7 @@ class DBSyntax
 
     str += ") VALUES ("
 
-		puts opts
+		#puts opts
     opts.each { |k, v|  
       if not v then
         v = ""
@@ -113,7 +113,7 @@ class DBSyntax
     str = str.gsub(/,$/, "")
 
     str += ")"
-		puts str
+		#puts str
   
     return str 
   end
@@ -141,7 +141,7 @@ class DBSyntax
 
     str += " WHERE " + "`" + String.new(key.to_s) + "` = '" + String.new(self.escape_val(value.to_s)) + "'"
 
-    puts str
+    #puts str
     return str
   end
 end
@@ -637,7 +637,7 @@ class SportsScraper
 
       @entrypoints['MLB'] = {
         "LeagueID" => 10,
-        "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
+        "url" => "http://espn.go.com/mlb/scoreboard?date" + @datestr,
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
         "scorePeriods" => [
@@ -832,8 +832,7 @@ class SportsScraper
 
       @leagueId = @entrypoint['LeagueID']
 
-      puts "League Id is: "
-      puts @leagueId
+      puts "League: " + @league
       @leagueFriendlyName  = @entrypoint['FriendlyName']
       @scorePeriods = @entrypoint['scorePeriods']
 
@@ -929,7 +928,7 @@ class SportsScraper
     def get_team_id(team_url)
         res = @client.get(team_url)
         parser = res.parser
-        puts team_url
+        #puts team_url
         matches = parser.inner_html.match(/\?teamId=(\d+)/) 
 
         return matches[1]
@@ -1132,7 +1131,7 @@ class SportsScraper
       cnt = 0
       away_stats.each { |stat|
           if cnt > 1 and cnt < hash.length then
-              #puts stat.inner_html
+              ##puts stat.inner_html
             if stat.children.length > 0 then
               team_stats[@away_acc][hash[cnt]] = stat.children[0].inner_html
             end
@@ -1321,7 +1320,7 @@ class SportsScraper
             }
           end
        }
-        puts players
+        #puts players
 
       return players
     end
@@ -1360,7 +1359,7 @@ class SportsScraper
           players_final[name]['url'] =  base_url + link
           players_final[name]['id'] = id[1]
           cnt = 0
-          puts stats
+          #puts stats
           stats.each { |stat|
             if cnt == 1 then 
               cnt += 1
@@ -1890,7 +1889,7 @@ class SportsScraper
            away =  blobs[lookup]['away']
            home = blobs[lookup]['home']
 
-            puts "\n\n\n"
+            #puts "\n\n\n"
            home_self = blobs[lookup]['home_self']
            away_self = blobs[lookup]['away_self']
             @lookup = lookup
@@ -1983,7 +1982,7 @@ class SportsScraper
           end
       }
 
-    puts players
+    #puts players
 
       ## return a 
       ## unified dataset
@@ -2014,7 +2013,7 @@ class SportsScraper
         "url" => link,
         "name" => name
       }
-      puts info
+      #puts info
       return info
     end
 
@@ -2206,7 +2205,7 @@ class SportsScraper
          end
 
 
-        puts curdata
+        #puts curdata
 
       return curdata
     end
@@ -2265,7 +2264,7 @@ class SportsScraper
     ## 0 => over
     def parse_match(gameId)
       
-       inProgress = 1
+       inProgress = 0
        finalScore = 0
 
        pureGameId = gameId
@@ -2296,8 +2295,8 @@ class SportsScraper
        end
 
        url = self.form_url("boxscore", pureGameId)
-       puts "trying url: "
-       puts url
+       puts "Game URL: " + url
+       #puts url
 
        ## for testing
        #resp = @client.get(url + gameId)
@@ -2326,12 +2325,17 @@ class SportsScraper
        ## what is provided
        ## as Attendance:\s\s\s\+(\d)
         attendance = 0
-        matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
+        if @league == "MLB" then
+          matches = parser.inner_text.match(/Attendance([\d]+,?[\d]+)/)
+        else
+          matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
+        end
+
+        puts "Attendance: " + attendance
+                     
         if matches then
           attendance = matches[1].gsub(/,/, "")
         end
-        
-
 
        ## get the start time of the game
        ## this is available in game-time-location
@@ -2359,10 +2363,10 @@ class SportsScraper
           "December" => 12
        }
        if time_of_match then
-         puts time_of_match
+         
          gameTime = time_of_match.children[0].inner_html
          #startDate = Date.parse(gameTime).strftime("%Y-%M-%d  %H:%i:%s")
-        
+         puts "Game Start Time: " + gameTime
          ## matches 
          ## 
          ## 2:00 PM, April 5, 2015
@@ -2418,12 +2422,12 @@ class SportsScraper
           ## UK format
         
           #split = parser.xpath("//div[@class='match-details']")
-          #puts split
+          ##puts split
           #split =split.children[2].inner_html 
           splitter = parser.inner_html.match(/var\s+?d\s+\=\s+new\s+Date\(([\d]+)\)/)
           
           unix_time = splitter[1].to_i / 1000
-          puts unix_time
+          #puts unix_time
 
           startDate = Time.at(unix_time).strftime("%Y-%m-%d %H:%M:%S")
         
@@ -2442,16 +2446,22 @@ class SportsScraper
        ## when it does the game has not started
       
 
-       status = parser.xpath("//*[@class='title']")
+       status = parser.xpath("//*[@class='game-state']")
 
       not_started = false
       ended = false
       status.each { |st|
-          if st.inner_html == "Tickets" then
-            not_started = true
-          end
-          if st.inner_html == "Recap" then
+          if st.inner_html.include? "Final" then
             ended = true
+            inProgress = 0
+            puts "Game Status: Final"
+          elsif st.inner_html.include? "In Progress" then
+            inProgress = 1
+            puts "Game Status: In Progress"
+          else
+            not_started = true
+            inProgress = 0
+            puts "Game Status: Not Started"
           end
       }
 
@@ -2487,7 +2497,7 @@ class SportsScraper
           ## we need to get the final
           ## score foreach team now
           matches = parser.xpath("//td[contains(@class,'ts')]")
-          puts matches
+          #puts matches
           home_final_score = matches[0].inner_html
           away_final_score = matches[1].inner_html
         end
@@ -2536,8 +2546,8 @@ class SportsScraper
             home_info = home.children[1].children[0].children[0]
           end
             
-          puts away_info
-          puts home_info
+          #puts away_info
+          #puts home_info
 
          away_name = away_info.inner_html
          home_name = home_info.inner_html
@@ -2562,7 +2572,7 @@ class SportsScraper
          @home_team_id = self.get_team_id(home_team_url)
          @away_team_id = self.get_team_id(away_team_url)
         
-         puts "Processing: " + @home_acc + " vs. " + @away_acc
+         puts "Teams: " + away_name + " vs. " + home_name
          ## our two next siblings are
          ## the quarter points for the first and second
          ## team
@@ -2616,10 +2626,10 @@ class SportsScraper
          home_scores = scores_full.slice(0, team_scores)
          away_scores = scores_full.slice(team_scores, scores_full.length)
 
-         puts "Home Scores are: "
-         puts home_scores
-         puts "Away scores are: "
-         puts away_scores
+         #puts "Home Scores are: "
+         #puts home_scores
+         #puts "Away scores are: "
+         #puts away_scores
        else
 
           ##processing
@@ -2634,7 +2644,7 @@ class SportsScraper
 
           score = score.children[1].children[1].inner_html
           scores = score.match(/(\d+)\s+-\s+(\d+)/)
-          puts scores
+          #puts scores
           home_scores = []
           away_scores = []
           home_score = scores[1]
@@ -3237,9 +3247,9 @@ class SportsScraper
     ## accordingly
     def start 
        url = @entrypoint['url'] 
-       puts "Starting scan.."
-       puts "On:"
-       puts url
+       #puts "Starting scan.."
+       #puts "On:"
+       #puts url
        result = @client.get(url)
        parser = result.parser
 
@@ -3458,9 +3468,8 @@ class SportsScraper
 
     ## need to return Y-m-D H:i:S
     def make_time()
-      time = Time.new()
-
-      return time.strftime("%Y-%m-%d %H:%I:%S")
+      # Time.zone is UTC by default. Check the config/application.rb
+      return Time.zone.now.strftime("%Y-%m-%d %H:%I:%S")
     end
 
 
