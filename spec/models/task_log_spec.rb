@@ -25,6 +25,14 @@ RSpec.describe TaskLog, type: :model do
 
   it { is_expected.to validate_presence_of(:task) }
 
+  describe 'after initialize' do
+    let(:task_log) { build(:task_log) }
+
+    it 'creates an @attrs_queue empty array' do
+      expect(task_log.instance_variable_get('@attrs_queue')).to eq([])
+    end
+  end
+
   describe 'after saving' do
     describe '.keep_max_logs' do
       let(:task) { create(:task) }
@@ -50,33 +58,32 @@ RSpec.describe TaskLog, type: :model do
     end
   end
 
-  describe '.log_record_insert' do
-    let(:task_log) { create(:task_log) }
+  describe '.queue' do
+    let(:task_log) { build(:task_log) }
 
-    it 'increments the records_inserted attribute' do
-      expect(task_log.records_inserted).to eq(0)
-      task_log.log_record_insert
-      expect(task_log.records_inserted).to eq(1)
+    it 'adds the given symbol to the attributes queue' do
+      task_log.queue(:games_in_progress)
+      task_log.queue(:records_updated)
+      expect(task_log.attrs_queue).to match_array([:games_in_progress, :records_updated])
     end
   end
 
-  describe '.log_record_update' do
-    let(:task_log) { create(:task_log) }
+  describe '.process_queue' do
+    let(:task_log) { create(:task_log, games_in_progress: 2, records_updated: 1, records_inserted: 4) }
 
-    it 'increments the records_updated attribute' do
-      expect(task_log.records_updated).to eq(0)
-      task_log.log_record_update
-      expect(task_log.records_updated).to eq(1)
-    end
-  end
+    context 'given a queue with N symbols of TaskLog attributes' do
+      it 'increments its attributes N times' do
+        task_log.queue(:games_in_progress)
+        task_log.queue(:records_updated)
+        task_log.queue(:records_updated)
+        task_log.queue(:records_inserted)
 
-  describe '.log_games_in_progress' do
-    let(:task_log) { create(:task_log, games_in_progress: 10) }
+        task_log.process_queue
 
-    it 'increments the games_in_progress attribute' do
-      expect(task_log.games_in_progress).to eq(10)
-      task_log.log_games_in_progress
-      expect(task_log.games_in_progress).to eq(11)
+        expect(task_log.games_in_progress).to eq(3)
+        expect(task_log.records_updated).to eq(3)
+        expect(task_log.records_inserted).to eq(5)
+      end
     end
   end
 end

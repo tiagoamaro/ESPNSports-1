@@ -2787,7 +2787,7 @@ class SportsScraper
 
     def insert_or_update_game(game)
      if game['InProgress'] == 1
-      @task_logger.log_games_in_progress
+      @task_logger.queue(:games_in_progress)
      end
 
      if not self.game_id_exists(game['gameId']) then
@@ -2831,7 +2831,7 @@ class SportsScraper
       })
 
       @db.query(updateStr)
-      @task_logger.log_record_update
+      @task_logger.queue(:records_updated)
 
       ## insert team stats
       if not game['InProgress'] == -1 then
@@ -2908,7 +2908,7 @@ class SportsScraper
         "ModifiedDate" => modifiedDate
       })
       @db.query(q)
-      @task_logger.log_record_insert
+      @task_logger.queue(:records_inserted)
     end
 
    
@@ -2928,7 +2928,7 @@ class SportsScraper
 
       q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
 
-      @task_logger.log_record_insert
+      @task_logger.queue(:records_inserted)
       return @db.query(q)
     end
 
@@ -2946,7 +2946,7 @@ class SportsScraper
       data = self.get_league_player_schema(player, true)
       q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
 
-      @task_logger.log_record_update
+      @task_logger.queue(:records_updated)
 			return @db.query(q)
     end
 
@@ -2963,7 +2963,7 @@ class SportsScraper
            "modifiedDate" => modifiedDate
       })
 
-      @task_logger.log_record_insert
+      @task_logger.queue(:records_inserted)
       return @db.query(q)
     end
 
@@ -3133,7 +3133,7 @@ class SportsScraper
       q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
       @db.query(q)
-      @task_logger.log_record_insert
+      @task_logger.queue(:records_inserted)
     end
 
     def update_game_team(gameId, team)
@@ -3141,7 +3141,7 @@ class SportsScraper
       q = @dbsyntax.update_str(@db, self.get_game_team_table(), "GameID", gameId, data)
 
       @db.query(q)
-      @task_logger.log_record_update
+      @task_logger.queue(:records_updated)
     end
 
     ## these need to insert
@@ -3226,7 +3226,7 @@ class SportsScraper
        })
 
        @db.query(insertStr)
-       @task_logger.log_record_insert
+       @task_logger.queue(:records_inserted)
 
        ##insert the team stats
        if not game['InProgress'] == -1 then
