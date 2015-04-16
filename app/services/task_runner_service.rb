@@ -29,7 +29,6 @@ class TaskRunnerService
           Rails.logger.info exception.backtrace
         ensure
           @task_logger.update(end_time: DateTime.now)
-          @task_logger.process_queue
           sleep(@task.interval)
         end
       end
