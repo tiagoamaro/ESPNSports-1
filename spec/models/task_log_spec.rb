@@ -8,7 +8,7 @@
 #  end_time          :datetime
 #  records_updated   :integer          default(0)
 #  records_inserted  :integer          default(0)
-#  games_in_progress :integer
+#  games_in_progress :integer          default(0)
 #  league_name       :string(255)
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
@@ -47,36 +47,6 @@ RSpec.describe TaskLog, type: :model do
         expect(task.logs).to match_array([task_log])
         expect(another_task.logs).to match_array([last_another_task_log])
       end
-    end
-  end
-
-  describe '.log_record_insert' do
-    let(:task_log) { create(:task_log) }
-
-    it 'increments the records_inserted attribute' do
-      expect(task_log.records_inserted).to eq(0)
-      task_log.log_record_insert
-      expect(task_log.records_inserted).to eq(1)
-    end
-  end
-
-  describe '.log_record_update' do
-    let(:task_log) { create(:task_log) }
-
-    it 'increments the records_updated attribute' do
-      expect(task_log.records_updated).to eq(0)
-      task_log.log_record_update
-      expect(task_log.records_updated).to eq(1)
-    end
-  end
-
-  describe '.log_games_in_progress' do
-    let(:task_log) { create(:task_log, games_in_progress: 10) }
-
-    it 'updates the games_in_progress attribute' do
-      expect(task_log.games_in_progress).to eq(10)
-      task_log.log_games_in_progress(40)
-      expect(task_log.games_in_progress).to eq(40)
     end
   end
 end

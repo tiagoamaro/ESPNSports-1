@@ -9,7 +9,10 @@ default: &default
 
 development:
   <<: *default
+
 test:
   <<: *default
+  database: 'espnsports_test'
+
 production:
   <<: *default

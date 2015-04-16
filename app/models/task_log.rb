@@ -8,7 +8,7 @@
 #  end_time          :datetime
 #  records_updated   :integer          default(0)
 #  records_inserted  :integer          default(0)
-#  games_in_progress :integer
+#  games_in_progress :integer          default(0)
 #  league_name       :string(255)
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
@@ -26,18 +26,6 @@ class TaskLog < ActiveRecord::Base
   validates :task, presence: true
 
   after_save :keep_max_logs
-
-  def log_record_insert
-    increment!(:records_inserted)
-  end
-
-  def log_record_update
-    increment!(:records_updated)
-  end
-
-  def log_games_in_progress(games_in_progress)
-    update(games_in_progress: games_in_progress)
-  end
 
   private
 

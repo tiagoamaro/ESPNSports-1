@@ -2331,7 +2331,7 @@ class SportsScraper
           matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         end
 
-        puts "Attendance: " + attendance
+        puts "Attendance: #{attendance}"
                      
         if matches then
           attendance = matches[1].gsub(/,/, "")
@@ -2786,6 +2786,10 @@ class SportsScraper
 		end
 
     def insert_or_update_game(game)
+     if game['InProgress'] == 1
+      @task_logger.increment(:games_in_progress)
+     end
+
      if not self.game_id_exists(game['gameId']) then
       return self.insert_game(game)
      else
@@ -2827,7 +2831,7 @@ class SportsScraper
       })
 
       @db.query(updateStr)
-      @task_logger.log_record_update
+      @task_logger.increment(:records_updated)
 
       ## insert team stats
       if not game['InProgress'] == -1 then
@@ -2904,7 +2908,7 @@ class SportsScraper
         "ModifiedDate" => modifiedDate
       })
       @db.query(q)
-      @task_logger.log_record_insert
+      @task_logger.increment(:records_inserted)
     end
 
    
@@ -2924,7 +2928,7 @@ class SportsScraper
 
       q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
 
-      @task_logger.log_record_insert
+      @task_logger.increment(:records_inserted)
       return @db.query(q)
     end
 
@@ -2942,7 +2946,7 @@ class SportsScraper
       data = self.get_league_player_schema(player, true)
       q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
 
-      @task_logger.log_record_update
+      @task_logger.increment(:records_updated)
 			return @db.query(q)
     end
 
@@ -2959,7 +2963,7 @@ class SportsScraper
            "modifiedDate" => modifiedDate
       })
 
-      @task_logger.log_record_insert
+      @task_logger.increment(:records_inserted)
       return @db.query(q)
     end
 
@@ -3129,7 +3133,7 @@ class SportsScraper
       q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
       @db.query(q)
-      @task_logger.log_record_insert
+      @task_logger.increment(:records_inserted)
     end
 
     def update_game_team(gameId, team)
@@ -3137,7 +3141,7 @@ class SportsScraper
       q = @dbsyntax.update_str(@db, self.get_game_team_table(), "GameID", gameId, data)
 
       @db.query(q)
-      @task_logger.log_record_update
+      @task_logger.increment(:records_updated)
     end
 
     ## these need to insert
@@ -3222,7 +3226,7 @@ class SportsScraper
        })
 
        @db.query(insertStr)
-       @task_logger.log_record_insert
+       @task_logger.increment(:records_inserted)
 
        ##insert the team stats
        if not game['InProgress'] == -1 then
@@ -3432,9 +3436,6 @@ class SportsScraper
         end
            
       end
-
-      # # Save the number of matches that are in progress, or: number of games in progress:
-      @task_logger.log_games_in_progress(@to_traverse.size)
 
       @to_traverse.each { |id|
          self.parse_match(id)
