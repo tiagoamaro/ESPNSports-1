@@ -3470,7 +3470,7 @@ class SportsScraper
     ## need to return Y-m-D H:i:S
     def make_time()
       # Time.zone is UTC by default. Check the config/application.rb
-      return Time.zone.now.strftime("%Y-%m-%d %H:%I:%S")
+      ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
     end
 
 
