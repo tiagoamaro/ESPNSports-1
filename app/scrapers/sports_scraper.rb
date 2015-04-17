@@ -2000,14 +2000,17 @@ class SportsScraper
     ## td>a[href='link']{text}
     ##
     def process_player_info(data)
+      link = nil
+      id = nil
+      name = nil
 
-      link = data.children[0].attr('href')
-       anchor = data.children[0]
-       name = anchor.inner_html
-        ## process the id
-       id = link.match(/id\/(\d+)/)
-       id = id[1]
-      
+      if link_tag = data.search('a')
+        link = link_tag.attr('href').value
+        name = link_tag.text
+        # Process the id
+        id = link.match(/id\/(\d+)/)
+      end
+
       info = {
         "id" => id,
         "url" => link,
@@ -2848,7 +2851,7 @@ class SportsScraper
 
     def player_exists(playerId)
       if playerId then
-       q =  @db.query("SELECT * FROM `Players` WHERE PlayerId = '" + playerId + "';")
+       q = @db.query("SELECT * FROM `Players` WHERE PlayerId = '#{playerId};'")
 
        return eval_count(q)
       end
