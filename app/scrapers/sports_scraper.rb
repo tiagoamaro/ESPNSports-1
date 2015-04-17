@@ -3424,11 +3424,20 @@ class SportsScraper
             }
 
           else
-            gameIds = parser.inner_html.scan(/\?gameId=(\d+)/).each { |gId|
+
+            # MLB and NBA have a JavaScript interface
+            if @entrypoint['LeagueName'] == 'MLB' || @entrypoint['LeagueName'] == 'NBA'
+              game_ids_on_data_attribute = parser.xpath("//div[@id='scoreboard-page']").attribute('data-data').value
+              game_ids_to_parse = game_ids_on_data_attribute.scan(/\?gameId=(\d+)/)
+            else
+              game_ids_to_parse = parser.inner_html.scan(/\?gameId=(\d+)/)
+            end
+
+            gameIds = game_ids_to_parse.each do |gId|
                 if not  @to_traverse.include? gId[0] and is_number(gId[0]) then
                   @to_traverse.push(gId[0])
                 end
-            }
+            end
       
           end
 
@@ -3470,7 +3479,7 @@ class SportsScraper
     ## need to return Y-m-D H:i:S
     def make_time()
       # Time.zone is UTC by default. Check the config/application.rb
-      return Time.zone.now.strftime("%Y-%m-%d %H:%I:%S")
+      ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
     end
 
 
