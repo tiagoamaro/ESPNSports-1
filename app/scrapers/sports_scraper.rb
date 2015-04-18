@@ -8,35 +8,18 @@ require "mechanize"
 ## the following logic
 ## MADE-ATTEMPTED
 ##
+## i.e.
+## 3PT_Made
+## 3PT_Attempted
+##
 ## currentGame variable
 ## always be the variable
 ## we are processing currently
 
 
-## these dfields will be seperated
+## these fields will be seperated
 ## in thedatabase so, you need to add the field
 ## schema logic
-
-## league ids can be found using
-## the espn website
-##
-## whenever adding a newleague add the corresponding
-##league id here
-
-## TODO Still needs a way 
-## to get the  
-
-LEAGUE_IDS =  {
-    "NFL" => "",
-    "NBA" => "",
-     "NHL" => ""
-}
-
-##
-## i.e.
-## 3PT_Made
-## 3PT_Attempted
-##
 
 
 ## add is_number to 
@@ -59,7 +42,7 @@ class DBSyntax
     rows_ = Array.new
 
     ## get the whole
-    ## schema as an arrayq
+    ## schema as an array
 
     while row = rows.fetch_row
       rows_.push(row)
@@ -113,7 +96,7 @@ class DBSyntax
     str = str.gsub(/,$/, "")
 
     str += ")"
-		#puts str
+    #puts str
   
     return str 
   end
@@ -156,8 +139,10 @@ class SportsScraper
       @entrypoints = {}
 
       @datestr = self.make_time()
+      puts "----------------------------------------------------------------------------"
+      puts "Current Date: #{@datestr}"
       @task_logger = task_logger
-
+                     
       @inheritors = {
         "NBA" => ['WNBA', 'NCAAB', 'NCB', 'NCAAWB', 'NCW'],
         "NFL" => ['NCAAF', 'NCF']
@@ -832,7 +817,8 @@ class SportsScraper
 
       @leagueId = @entrypoint['LeagueID']
 
-      puts "League: " + @league
+      puts "League: #{@league}"
+      puts "----------------------------------------------------------------------------"
       @leagueFriendlyName  = @entrypoint['FriendlyName']
       @scorePeriods = @entrypoint['scorePeriods']
 
@@ -2127,9 +2113,12 @@ class SportsScraper
         ## also get the percentages
       else
         ## start by 1 then first column always says "Team" we don't need it
+        
         cnt = 0
+        
         curdata = {}
 
+                     
         mod.children[0].children.each { |stat| 
           if  cnt >= 1 then
             curdata = process_data_further(cnt - 1, stat, struct, trans, curdata)
@@ -2267,12 +2256,12 @@ class SportsScraper
     ## 0 => over
     def parse_match(gameId)
       
+       
        inProgress = 0
        finalScore = 0
-
        pureGameId = gameId
-        
-       ## our game id becomes the 
+       
+       ## our game id becomes the
        ## only the digits starting
        ## at the game
        ##
@@ -2291,14 +2280,14 @@ class SportsScraper
 
      
        if game then
-        if game['InProgress'] == 0 then
+        if game['inProgress'] == 0 then
           print "This game ended and we stored its results.."
           return
         end
        end
 
        url = self.form_url("boxscore", pureGameId)
-       puts "Game URL: " + url
+       puts "Game URL: #{url}"
        #puts url
 
        ## for testing
@@ -2334,11 +2323,12 @@ class SportsScraper
           matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
         end
 
-        puts "Attendance: #{attendance}"
+        
                      
         if matches then
           attendance = matches[1].gsub(/,/, "")
         end
+                     
 
        ## get the start time of the game
        ## this is available in game-time-location
@@ -2369,7 +2359,7 @@ class SportsScraper
          
          gameTime = time_of_match.children[0].inner_html
          #startDate = Date.parse(gameTime).strftime("%Y-%M-%d  %H:%i:%s")
-         puts "Game Start Time: " + gameTime
+         puts "Game Time: #{gameTime}"
          ## matches 
          ## 
          ## 2:00 PM, April 5, 2015
@@ -2455,29 +2445,33 @@ class SportsScraper
       ended = false
       status.each { |st|
           if st.inner_html.include? "Final" then
-            ended = true
             inProgress = 0
+            ended = true
             puts "Game Status: Final"
-          elsif st.inner_html.include? "In Progress" then
+          elsif st.inner_html.include? "ET" then
+            inProgress = -1
+            not_started = true
+            puts "Game Status: Not Started"
+          else
             inProgress = 1
             puts "Game Status: In Progress"
-          else
-            not_started = true
-            inProgress = 0
-            puts "Game Status: Not Started"
           end
       }
-
-      if not_started then
-        inProgress = -1
-        game = {
-           "gameId" => gameId, 
-            "title" => gametitle,
-            "InProgress" => inProgress
-         }
-         return self.insert_or_update_game(game)
-      end
-
+    
+     if not_started then
+     game = {
+         "ESPNUrl" => url,
+         "Attendance" => attendance,
+         "LeagueID" => @leagueId,
+         "HomeTeamId" => @home_team_id,
+         "AwayTeamId" => @away_team_id,
+         "StartDate" => startDate,
+         "gameId" => gameId,
+         "GameTitle" => gametitle,
+         "InProgress" => inProgress
+     }
+     return self.insert_or_update_game(game)
+     end
 
       home_final_score = 0
       away_final_score = 0
@@ -2487,9 +2481,6 @@ class SportsScraper
       ## we will do one 
       ## last round for quality
       if ended then
-        inProgress = 0
-
-
         if @leagueFriendlyName == "Baseball" or self.is_singular_league() then 
           ## TODO does not support
           ## the class 'ts'
@@ -2505,7 +2496,6 @@ class SportsScraper
           away_final_score = matches[1].inner_html
         end
       end
-
       
       title =  parser.xpath("//title").first.inner_html
 
@@ -2576,6 +2566,7 @@ class SportsScraper
          @away_team_id = self.get_team_id(away_team_url)
         
          puts "Teams: " + away_name + " vs. " + home_name
+         puts "----------------------------------------------------------------------------"
          ## our two next siblings are
          ## the quarter points for the first and second
          ## team
@@ -2674,6 +2665,7 @@ class SportsScraper
      end
 
   
+                     
       ##  todo
       ## needs revisioning
       if not self.is_singular_league()
@@ -2728,7 +2720,7 @@ class SportsScraper
            "url" => away_team_url,
            "id" => @away_team_id,
             "scores" => away_scores,
-           "finalScore" => "",
+           "finalScore" => away_final_score,
            "stats" => team_stats[@away_acc]
         },
        "home" => {
@@ -2760,33 +2752,6 @@ class SportsScraper
       self.insert_or_update_game(game)
     end
 
-
-	  ## check whether
-		## a league
-		## exists
-		## this should be ran before
-		## a game check
-		def league_id_exists(leagueId)
-			q = @db.query("SELECT * FROM `Leagues` WHERE LeagueID = '" + leagueId + "'")
-			return self.eval_count(q)
-		end
-
-		## insert a league into the database
-		## t
-		def insert_league(leagueId)
-			str = @dbsyntax.insert_str(@db, "Leagues", {
-				"LeagueID" => @leagueId,
-				"LeagueName" => @entrypoint['LeagueName'],
-				"SportName" => @entrypoint['FriendlyName']
-			})
-			@db.query(str)
-		end
-
-		def check_league(leagueId) 
-			if not league_id_exists(leagueId) then
-				insert_league(leagueId)
-			end
-		end
 
     def insert_or_update_game(game)
      if game['InProgress'] == 1
@@ -2826,8 +2791,8 @@ class SportsScraper
     ## league.teams
     ## league.players
     def update_game(game)
-
-      modifiedDate = self.make_time() ##time.strftime('%Y-%m-%d')
+      time = Time.new
+      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
       updateStr = @dbsyntax.update_str(@db, "Games", "GameID", game['gameId'], {
         "InProgress" => game['InProgress'],
         "ModifiedDate" => modifiedDate
@@ -2898,7 +2863,8 @@ class SportsScraper
     #implementation
     ## using the fields
     def insert_player(player)
-      createdDate = self.make_time() ##time.strftime("%Y-%m-%d")
+      time = Time.new
+      createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
       modifiedDate = createdDate
       
       q = @dbsyntax.insert_str(@db, self.get_players_table(), {
@@ -2936,7 +2902,8 @@ class SportsScraper
     end
 
     def update_player(player)
-      modifiedDate = self.make_time() ##Time.new().strftime("%Y-%m-%d")
+      time = Time.new
+      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
       q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", data['id'], {
         "ModifiedDate" => modifiedDate
       })
@@ -2954,8 +2921,8 @@ class SportsScraper
     end
 
     def insert_team(team)
-
-      createdDate = self.make_time() #time.strftime("%Y-%m-%d")
+      time = Time.new
+      createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
       modifiedDate = createdDate
       q = @dbsyntax.insert_str(@db, self.get_teams_table(), {
            "TeamId" => team['id'],
@@ -2971,7 +2938,8 @@ class SportsScraper
     end
 
     def update_team(team)
-      modifiedDate = self.make_time() # time.strftime("%Y-%m-%d")
+      time = Time.new
+      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
       q = @dbsyntax.update_str(@db, self.get_teams_table(), {
         "TeamID"  => team['id'],
         "TeamPrefix" => team['prefix'],
@@ -3027,12 +2995,12 @@ class SportsScraper
        } 
       time = Time.new 
       if not isUpdate then
-        createdDate =  time.strftime("%Y-%m-%d")
+        createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
         pred['PlayerID'] =  data['id']
       end
 
-      modifiedDate = time.strftime("%Y-%m-%d")
+      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
       ## we also
       ## need game id, league id and team id
       ## createdDate and modified date
@@ -3062,6 +3030,7 @@ class SportsScraper
       pred = {}
       lang = @scorePeriods
       cnt = 0
+      time = Time.new
       ## keep ## traversing the 
       ### score period
       ## set until 
@@ -3103,7 +3072,7 @@ class SportsScraper
 			## can be found
 			## in main objects and current game
       
-			date = self.make_time() ##time.strftime("%Y-%m-%d")	
+			date = time.strftime("%Y-%m-%d %H:%M:%S")
       if not isUpdate then
         pred['CreatedDate'] = date 
       end
@@ -3209,7 +3178,7 @@ class SportsScraper
     def insert_game(game)
        time = Time.new
        
-       startDate = self.make_time() #time.strftime("%Y-%m-%d")
+       startDate = time.strftime("%Y-%m-%d %H:%M:%S")
        modifiedDate = startDate
        createdDate = startDate
    
@@ -3253,10 +3222,7 @@ class SportsScraper
     ## return the results
     ## accordingly
     def start 
-       url = @entrypoint['url'] 
-       #puts "Starting scan.."
-       #puts "On:"
-       #puts url
+       url = @entrypoint['url']
        result = @client.get(url)
        parser = result.parser
 
@@ -3456,22 +3422,6 @@ class SportsScraper
     end
 
 
-    def get_league_table()
-
-    end
-    ## adds a league
-    ## to the database
-    ##
-    def add_league(opts)
-
-      
-      str = @dbsyntax.insert_str(@db, self.get_league_table(), opts) 
-      
-      @db.query(str)
-
-    end
-
-
     def is_college_league()
       if @league == "NCF" or @league == "NCW" or @league == "NCB" then
        return true
@@ -3486,18 +3436,6 @@ class SportsScraper
     end
 
 
-    ## update leagues
-    ## 
-    ## this will update
-    ##  the league in 
-    ## database
-    def update_league(opts)
-      str = @dbsyntax.update_str(@league_table, opts)
-
-      @db.query(str)
-    end
-
-    ##
     ##
     def update_match(opts)
       str = @dbsyntax.update_str(@db, @league_table,opts)
@@ -3510,11 +3448,3 @@ class SportsScraper
     end
 end
 
-
-## examples you can use as follows
-##
-# scr = SportsScraper.new("NASCAR")
-# scr.start()
-##
-##
-##
