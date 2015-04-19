@@ -2552,20 +2552,22 @@ class SportsScraper
          ## which should successfully get the info
          ## should our info be right
 
-         ## getting the accronymes
+         ## getting the acronyms
          ## for the team should
          ## follow this approach
          ## /team/_/name/ACCRONYM/
          ##
-         ## TODO chekc on new update
-         matches = away_team_url.match(/\/([\w\-]+)\/?/)
-         @away_acc = matches[1].upcase
-         matches1 = home_team_url.match(/\/([\w\-]+)\/?/)
-         @home_acc = matches1[1].upcase
+         ## TODO check on new update
+         # away_regex_match = away_team_url.match(/\/([\w\-]+)\/?/)
+         away_regex_match = away_team_url.match(/name\/(\w*)\//)
+         @away_acc = away_regex_match[1].upcase
+         # home_regex_match = home_team_url.match(/\/([\w\-]+)\/?/)
+         home_regex_match = home_team_url.match(/name\/(\w*)\//)
+         @home_acc = home_regex_match[1].upcase
          @home_team_id = self.get_team_id(home_team_url)
          @away_team_id = self.get_team_id(away_team_url)
-        
-         puts "Teams: " + away_name + " vs. " + home_name
+
+         puts "Teams: #{away_name}(#{@away_acc}) vs. #{home_name}(#{@home_acc})"
          puts "----------------------------------------------------------------------------"
          ## our two next siblings are
          ## the quarter points for the first and second
