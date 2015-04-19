@@ -668,17 +668,22 @@ class SportsScraper
          },
          "trans" => {
            "Pitchers" => {
-                "HR" => "PitchingHomeRuns", 
                 "IP" => "PitchingInnings",
-                "ER" => "PitchingEarnedRuns",
+                "H" => "PitchingHits",
                 "R" => "PitchingRuns",
-                "RBI" => "RBI",
+                "ER" => "PitchingEarnedRuns",
+                "BB" => "PitchingWalks",
                 "SO" => "PitchingStrikeouts",
+                "HR" => "PitchingHomeRuns"
             },
             "Batters" => {
                 "AB" => "AtBats",
                 "R" => "Runs",
-                "HR" => "Homeruns"
+                "H" => "Hits",
+                "RBI" => "RBI",
+                "HR" => "Homeruns",
+                "BB" => "Walks",
+                "SO" => "Strikeouts"
             }
          },
          "splitters" => {
