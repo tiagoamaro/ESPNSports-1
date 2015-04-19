@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150419195653) do
+ActiveRecord::Schema.define(version: 20150415122641) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,                 null: false
@@ -244,32 +244,28 @@ ActiveRecord::Schema.define(version: 20150419195653) do
   add_index "Players", ["TeamID"], name: "TeamID", using: :btree
 
   create_table "TeamStats_Baseball", id: false, force: :cascade do |t|
-    t.integer  "GameID",             limit: 4,             null: false
-    t.integer  "LeagueID",           limit: 4,             null: false
-    t.integer  "TeamID",             limit: 4,             null: false
-    t.integer  "Inning_1",           limit: 1, default: 0
-    t.integer  "Inning_2",           limit: 1, default: 0
-    t.integer  "Inning_3",           limit: 1, default: 0
-    t.integer  "Inning_4",           limit: 1, default: 0
-    t.integer  "Inning_5",           limit: 1, default: 0
-    t.integer  "Inning_6",           limit: 1, default: 0
-    t.integer  "Inning_7",           limit: 1, default: 0
-    t.integer  "Inning_8",           limit: 1, default: 0
-    t.integer  "Inning_9",           limit: 1, default: 0
-    t.integer  "Inning_10",          limit: 1, default: 0
-    t.integer  "Inning_11",          limit: 1, default: 0
-    t.integer  "Inning_12",          limit: 1, default: 0
-    t.integer  "Inning_13",          limit: 1, default: 0
-    t.integer  "Inning_14",          limit: 1, default: 0
-    t.integer  "Runs",               limit: 1, default: 0
+    t.integer  "GameID",       limit: 4,             null: false
+    t.integer  "LeagueID",     limit: 4,             null: false
+    t.integer  "TeamID",       limit: 4,             null: false
+    t.integer  "Inning_1",     limit: 1, default: 0
+    t.integer  "Inning_2",     limit: 1, default: 0
+    t.integer  "Inning_3",     limit: 1, default: 0
+    t.integer  "Inning_4",     limit: 1, default: 0
+    t.integer  "Inning_5",     limit: 1, default: 0
+    t.integer  "Inning_6",     limit: 1, default: 0
+    t.integer  "Inning_7",     limit: 1, default: 0
+    t.integer  "Inning_8",     limit: 1, default: 0
+    t.integer  "Inning_9",     limit: 1, default: 0
+    t.integer  "Inning_10",    limit: 1, default: 0
+    t.integer  "Inning_11",    limit: 1, default: 0
+    t.integer  "Inning_12",    limit: 1, default: 0
+    t.integer  "Inning_13",    limit: 1, default: 0
+    t.integer  "Inning_14",    limit: 1, default: 0
+    t.integer  "Runs",         limit: 1, default: 0
+    t.integer  "Hits",         limit: 1, default: 0
+    t.integer  "Errors",       limit: 1, default: 0
     t.datetime "CreatedDate"
     t.datetime "ModifiedDate"
-    t.integer  "AtBats",             limit: 4
-    t.integer  "PitchingInnings",    limit: 4
-    t.integer  "PitchingRuns",       limit: 4
-    t.integer  "PitchingEarnedRuns", limit: 4
-    t.integer  "PitchingStrikeouts", limit: 4
-    t.integer  "PitchingHomeRuns",   limit: 4
   end
 
   add_index "TeamStats_Baseball", ["GameID"], name: "GameID", using: :btree
