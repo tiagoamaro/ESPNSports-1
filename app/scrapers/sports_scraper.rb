@@ -2459,18 +2459,18 @@ class SportsScraper
       }
     
      if not_started then
-     game = {
-         "ESPNUrl" => url,
-         "Attendance" => attendance,
-         "LeagueID" => @leagueId,
-         "HomeTeamId" => @home_team_id,
-         "AwayTeamId" => @away_team_id,
-         "StartDate" => startDate,
-         "gameId" => gameId,
-         "GameTitle" => gametitle,
-         "InProgress" => inProgress
-     }
-     return self.insert_or_update_game(game)
+       game = {
+           "ESPNUrl" => url,
+           "Attendance" => attendance,
+           "LeagueID" => @leagueId,
+           "HomeTeamId" => @home_team_id,
+           "AwayTeamId" => @away_team_id,
+           "StartDate" => startDate,
+           "gameId" => gameId,
+           "GameTitle" => gametitle,
+           "InProgress" => inProgress
+       }
+       return self.insert_or_update_game(game)
      end
 
       home_final_score = 0
