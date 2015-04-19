@@ -2530,6 +2530,8 @@ class SportsScraper
          matchup = parser.xpath("//*[@id='matchup-" + @league.downcase +  "-" + gameId +"']")
          away = matchup.xpath("//*[@class='team away']")
          home = matchup.xpath("//*[@class='team home']")
+         awayfull = matchup.xpath("//*[@class='team-color-strip']")
+         homefull = matchup.xpath("//*[@class='team-color-strip']")
 
 
           if away.children[1].children[0].children.length > 3 then
@@ -2544,11 +2546,16 @@ class SportsScraper
             home_info = home.children[1].children[0].children[0]
           end
             
+          awayfull_info = awayfull.children[0]
+          homefull_info = homefull.children[2]
+                     
           #puts away_info
           #puts home_info
 
          away_name = away_info.inner_html
          home_name = home_info.inner_html
+         away_namefull = awayfull_info.inner_text
+         home_namefull = homefull_info.inner_text
          away_team_url = away_info.attr("href")
          home_team_url = home_info.attr("href")
 
@@ -2722,16 +2729,18 @@ class SportsScraper
       team_stats = stats['teams']
       teams = {
         "away" => {
-          "name" => @away_acc,
+           "name" => away_name,
+           "fullname" => away_namefull,
            "prefix" => @away_acc,
            "url" => away_team_url,
            "id" => @away_team_id,
-            "scores" => away_scores,
+           "scores" => away_scores,
            "finalScore" => away_final_score,
            "stats" => team_stats[@away_acc]
         },
        "home" => {
-          "name" => @home_acc,
+          "name" => home_name,
+          "fullname" => home_namefull,
           "url" => home_team_url,
           "prefix" => @home_acc,
           "id" => @home_team_id,
@@ -2934,6 +2943,8 @@ class SportsScraper
       q = @dbsyntax.insert_str(@db, self.get_teams_table(), {
            "TeamId" => team['id'],
            "TeamPrefix" => team['prefix'],
+           "TeamName" => team['name'],
+           "TeamCity" => team['fullname'],
            "ESPNUrl" => team['url'],
            "LeagueID" => @leagueId,
            "createdDate" => createdDate, 
@@ -2950,6 +2961,8 @@ class SportsScraper
       q = @dbsyntax.update_str(@db, self.get_teams_table(), {
         "TeamID"  => team['id'],
         "TeamPrefix" => team['prefix'],
+        "TeamName" => team['name'],
+        "TeamCity" => team['fullname'],
         "LeagueID" => @leagueId,
         "ESPNUrl" => team['url'],
         "ModifiedDate "=> modifiedDate
