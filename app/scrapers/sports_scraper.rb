@@ -3056,16 +3056,16 @@ class SportsScraper
       pred['FinalScore']  = @currentGame['FinalScore']
      end
 
-      # Extract game stats here
-      # This iterator will map each column with the retrieved data
-      stats = data['stats']
-      @teamSchema.each do |field|
-        key = field[0]
 
-        if stats[key]
-          pred[key] = stats[key]
+     @teamSchema.each { |field|
+
+        ## check for existance
+        ## here
+
+        if data[field] then
+          pred[field] = data[field]
         end
-      end
+      }
 
 			## other things
 			## that we will need
