@@ -668,17 +668,22 @@ class SportsScraper
          },
          "trans" => {
            "Pitchers" => {
-                "HR" => "PitchingHomeRuns", 
                 "IP" => "PitchingInnings",
-                "ER" => "PitchingEarnedRuns",
+                "H" => "PitchingHits",
                 "R" => "PitchingRuns",
-                "RBI" => "RBI",
+                "ER" => "PitchingEarnedRuns",
+                "BB" => "PitchingWalks",
                 "SO" => "PitchingStrikeouts",
+                "HR" => "PitchingHomeRuns"
             },
             "Batters" => {
                 "AB" => "AtBats",
                 "R" => "Runs",
-                "HR" => "Homeruns"
+                "H" => "Hits",
+                "RBI" => "RBI",
+                "HR" => "Homeruns",
+                "BB" => "Walks",
+                "SO" => "Strikeouts"
             }
          },
          "splitters" => {
@@ -2459,18 +2464,18 @@ class SportsScraper
       }
     
      if not_started then
-     game = {
-         "ESPNUrl" => url,
-         "Attendance" => attendance,
-         "LeagueID" => @leagueId,
-         "HomeTeamId" => @home_team_id,
-         "AwayTeamId" => @away_team_id,
-         "StartDate" => startDate,
-         "gameId" => gameId,
-         "GameTitle" => gametitle,
-         "InProgress" => inProgress
-     }
-     return self.insert_or_update_game(game)
+       game = {
+           "ESPNUrl" => url,
+           "Attendance" => attendance,
+           "LeagueID" => @leagueId,
+           "HomeTeamId" => @home_team_id,
+           "AwayTeamId" => @away_team_id,
+           "StartDate" => startDate,
+           "gameId" => gameId,
+           "GameTitle" => gametitle,
+           "InProgress" => inProgress
+       }
+       return self.insert_or_update_game(game)
      end
 
       home_final_score = 0
@@ -2552,20 +2557,22 @@ class SportsScraper
          ## which should successfully get the info
          ## should our info be right
 
-         ## getting the accronymes
+         ## getting the acronyms
          ## for the team should
          ## follow this approach
          ## /team/_/name/ACCRONYM/
          ##
-         ## TODO chekc on new update
-         matches = away_team_url.match(/\/([\w\-]+)\/?/)
-         @away_acc = matches[1].upcase
-         matches1 = home_team_url.match(/\/([\w\-]+)\/?/)
-         @home_acc = matches1[1].upcase
+         ## TODO check on new update
+         # away_regex_match = away_team_url.match(/\/([\w\-]+)\/?/)
+         away_regex_match = away_team_url.match(/name\/(\w*)\//)
+         @away_acc = away_regex_match[1].upcase
+         # home_regex_match = home_team_url.match(/\/([\w\-]+)\/?/)
+         home_regex_match = home_team_url.match(/name\/(\w*)\//)
+         @home_acc = home_regex_match[1].upcase
          @home_team_id = self.get_team_id(home_team_url)
          @away_team_id = self.get_team_id(away_team_url)
-        
-         puts "Teams: " + away_name + " vs. " + home_name
+
+         puts "Teams: #{away_name}(#{@away_acc}) vs. #{home_name}(#{@home_acc})"
          puts "----------------------------------------------------------------------------"
          ## our two next siblings are
          ## the quarter points for the first and second
