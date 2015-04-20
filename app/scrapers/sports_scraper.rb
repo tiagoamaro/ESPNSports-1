@@ -80,7 +80,7 @@ class DBSyntax
 
     str += ") VALUES ("
 
-		#puts opts
+                     #puts opts
     opts.each { |k, v|  
       if not v then
         v = ""
@@ -96,7 +96,7 @@ class DBSyntax
     str = str.gsub(/,$/, "")
 
     str += ")"
-    #puts str
+                     #puts str
   
     return str 
   end
@@ -982,11 +982,12 @@ class SportsScraper
        final_players.each { |player_|
 					player = player_['element']
 					teamId = player_['teamId']
+                     
           ## needs a way
           ## of finding
           ## which team the
           ## player is one
-    
+ 
         
           ## first record is always
           ## there name
@@ -2546,12 +2547,14 @@ class SportsScraper
             home_info = home.children[1].children[0].children[0]
           end
             
-          awayfull_info = awayfull.children[0]
-          homefull_info = homefull.children[2]
+          if @league == 'MLB' then
+            awayfull_info = awayfull.children[0]
+            homefull_info = homefull.children[2]
+          else
+            awayfull_info = awayfull.children[0].children[2]
+            homefull_info = homefull.children[1].children[2]
+          end
                      
-          #puts away_info
-          #puts home_info
-
          away_name = away_info.inner_html
          home_name = home_info.inner_html
          away_namefull = awayfull_info.inner_text
@@ -2590,14 +2593,18 @@ class SportsScraper
          
          ## get the total scores
 
-         totals = els.xpath("//td[contains(@class,'ts')]")
+         
      
 
          if not @leagueFriendlyName == "Baseball"  then
+           totals = els.xpath("//td[contains(@class,'ts')]")
            home_score = totals[0].inner_html
            away_score = totals[1].inner_html
+         else
+           totals = els.xpath("//td[contains(@style,'font-weight:bold')]")
+           home_score = totals[3].children[0].inner_text.gsub(/\s+/, "")
+           away_score = totals[4].children[0].inner_text.gsub(/\s+/, "")
          end
-
 
          scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
          scores_full = Array.new 
@@ -2856,7 +2863,7 @@ class SportsScraper
       return -1
     end
 
-    def game_player_exists(gameId, playerId) 
+    def game_player_exists(gameId, playerId)
      if playerId then
        q = @db.query("SELECT * FROM `" + self.get_game_player_table() + "` WHERE PlayerId = '" + playerId + "' AND GameId = '" + gameId + "'")
 
