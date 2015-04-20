@@ -402,7 +402,7 @@ ActiveRecord::Schema.define(version: 20150415122641) do
     t.integer  "LeagueID",     limit: 4
     t.string   "TeamPrefix",   limit: 10
     t.string   "TeamName",     limit: 50
-    t.string   "TeamCity",     limit: 50
+    t.string   "TeamFullName",     limit: 50
     t.string   "ESPNUrl",      limit: 150
     t.datetime "CreatedDate",              null: false
     t.datetime "ModifiedDate",             null: false

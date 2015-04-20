@@ -2944,7 +2944,7 @@ class SportsScraper
            "TeamId" => team['id'],
            "TeamPrefix" => team['prefix'],
            "TeamName" => team['name'],
-           "TeamCity" => team['fullname'],
+           "TeamFullName" => team['fullname'],
            "ESPNUrl" => team['url'],
            "LeagueID" => @leagueId,
            "createdDate" => createdDate, 
@@ -2962,7 +2962,7 @@ class SportsScraper
         "TeamID"  => team['id'],
         "TeamPrefix" => team['prefix'],
         "TeamName" => team['name'],
-        "TeamCity" => team['fullname'],
+        "TeamFullName" => team['fullname'],
         "LeagueID" => @leagueId,
         "ESPNUrl" => team['url'],
         "ModifiedDate "=> modifiedDate
