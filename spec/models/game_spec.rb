@@ -9,7 +9,7 @@
 #  AwayTeamID   :integer
 #  Attendance   :integer          default(0)
 #  StartDate    :datetime
-#  InProgress   :binary(1)        default("0"), not null
+#  InProgress   :integer          default(0)
 #  ESPNUrl      :string(150)      not null
 #  CreatedDate  :datetime         not null
 #  ModifiedDate :datetime         not null

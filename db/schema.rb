@@ -14,16 +14,16 @@
 ActiveRecord::Schema.define(version: 20150421173639) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
-    t.integer  "LeagueID",     limit: 4,                 null: false
+    t.integer  "LeagueID",     limit: 4,               null: false
     t.string   "GameTitle",    limit: 150
     t.integer  "HomeTeamID",   limit: 4
     t.integer  "AwayTeamID",   limit: 4
     t.integer  "Attendance",   limit: 4,   default: 0
     t.datetime "StartDate"
-    t.binary   "InProgress",   limit: 1,   default: "0", null: false
-    t.string   "ESPNUrl",      limit: 150,               null: false
-    t.datetime "CreatedDate",                            null: false
-    t.datetime "ModifiedDate",                           null: false
+    t.integer  "InProgress",   limit: 4,   default: 0
+    t.string   "ESPNUrl",      limit: 150,             null: false
+    t.datetime "CreatedDate",                          null: false
+    t.datetime "ModifiedDate",                         null: false
   end
 
   add_index "Games", ["AwayTeamID"], name: "index_matches_on_away_team_id", using: :btree
