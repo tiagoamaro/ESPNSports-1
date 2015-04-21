@@ -2583,8 +2583,8 @@ class SportsScraper
          # home_regex_match = home_team_url.match(/\/([\w\-]+)\/?/)
          home_regex_match = home_team_url.match(/name\/(\w*)\//)
          @home_acc = home_regex_match[1].upcase
-         @home_team_id = self.get_team_id(home_team_url)
-         @away_team_id = self.get_team_id(away_team_url)
+         @home_team_id = "#{@leagueId}#{self.get_team_id(home_team_url)}"
+         @away_team_id = "#{@leagueId}#{self.get_team_id(away_team_url)}"
 
          puts "Teams: #{away_name}(#{@away_acc}) vs. #{home_name}(#{@home_acc})"
          puts "----------------------------------------------------------------------------"
@@ -2597,8 +2597,8 @@ class SportsScraper
              "ESPNUrl" => url,
              "Attendance" => attendance,
              "LeagueID" => @leagueId,
-             "HomeTeamId" => "#{@leagueId}#{@home_team_id}",
-             "AwayTeamId" => "#{@leagueId}#{@away_team_id}",
+             "HomeTeamId" => @home_team_id,
+             "AwayTeamId" => @away_team_id,
              "StartDate" => startDate,
              "gameId" => gameId,
              "GameTitle" => gametitle,
@@ -2877,7 +2877,7 @@ class SportsScraper
     end
 
     def eval_count(rows)
-      puts "rows: #{rows.num_rows}"
+
       if rows.num_rows > 0 then
          return true
       else
