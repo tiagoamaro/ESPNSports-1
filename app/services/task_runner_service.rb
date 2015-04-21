@@ -28,7 +28,10 @@ class TaskRunnerService
         begin
           @task.scraper.constantize.new(@task.league_name, @task_logger).start
         rescue => exception
-          Rails.logger.info exception.backtrace
+          Rails.logger.info '-------------------'
+          Rails.logger.info exception.message
+          Rails.logger.info '-------------------'
+          exception.backtrace.each { |line| Rails.logger.info line }
         ensure
           @task_logger.update(end_time: DateTime.now)
           sleep(@task.interval)
