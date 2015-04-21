@@ -2889,9 +2889,9 @@ class SportsScraper
       time = Time.new
       createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
       modifiedDate = createdDate
-      
+
       q = @dbsyntax.insert_str(@db, self.get_players_table(), {
-        "PlayerID" => player['id'],
+        "PlayerID" => "#{player['id']}".gsub!(/\D/,""),
         "PlayerName" => player['name'],
         "ESPNURL" => player['url'],
         "LeagueID" =>  @leagueId,
@@ -2927,7 +2927,7 @@ class SportsScraper
     def update_player(player)
       time = Time.new
       modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", data['id'], {
+      q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", "#{data['id']}".gsub!(/\D/,""), {
         "ModifiedDate" => modifiedDate
       })
 
@@ -3024,7 +3024,7 @@ class SportsScraper
       if not isUpdate then
         createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
-        pred['PlayerID'] =  data['id']
+        pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
       end
 
       modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -3151,9 +3151,9 @@ class SportsScraper
     ## player ids need to know
     ## there team id
     def insert_or_update_player(gameId, player)
-      pReturn = self.player_exists(player['id']) 
+      pReturn = self.player_exists("#{player['id']}".gsub!(/\D/,""))
       if pReturn then
-        if self.game_player_exists(gameId, player['id'])
+        if self.game_player_exists(gameId, "#{player['id']}".gsub!(/\D/,""))
           self.update_game_player(gameId, player)
         else
 
