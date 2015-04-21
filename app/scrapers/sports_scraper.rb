@@ -2847,7 +2847,7 @@ class SportsScraper
     end
 
     def eval_count(rows)
-                     puts "rows: #{rows.num_rows}"
+      puts "rows: #{rows.num_rows}"
       if rows.num_rows > 0 then
          return true
       else
@@ -2877,8 +2877,8 @@ class SportsScraper
     def game_team_exists(gameId, teamId)
       if teamId then
         q = @db.query("SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}")
-          puts "SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}"
-                     puts "eval #{teamId} #{self.eval_count(q)}"
+        puts "SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}"
+        puts "eval #{teamId} #{self.eval_count(q)}"
         return self.eval_count(q)
       end
 
@@ -3185,8 +3185,10 @@ class SportsScraper
     ## team ids
     def insert_or_update_team(gameId, team)
       teamRet = self.team_exists(team['id'])
-puts "gameId: #{gameId}"
-puts "teamId: #{team['id']}"
+
+      puts "gameId: #{gameId}"
+      puts "teamId: #{team['id']}"
+
       if teamRet then
         if self.game_team_exists(gameId, team['id']) then
           self.update_game_team(gameId, team)

@@ -9,7 +9,9 @@ class TaskRunnerService
     begin
       Process.kill(9, @task.pid)
     rescue => exception
-      Rails.logger.info exception.backtrace
+      Rails.logger.info '-----------------------------------'
+      Rails.logger.info "Process #{@task.pid} did not exist. Moving on..."
+      Rails.logger.info '-----------------------------------'
     end
 
     @task.update(pid: nil)

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150415122641) do
+ActiveRecord::Schema.define(version: 20150421131740) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,                 null: false
@@ -402,10 +402,10 @@ ActiveRecord::Schema.define(version: 20150415122641) do
     t.integer  "LeagueID",     limit: 4
     t.string   "TeamPrefix",   limit: 10
     t.string   "TeamName",     limit: 50
-    t.string   "TeamFullName",     limit: 50
     t.string   "ESPNUrl",      limit: 150
     t.datetime "CreatedDate",              null: false
     t.datetime "ModifiedDate",             null: false
+    t.string   "TeamFullName", limit: 255
   end
 
   add_index "Teams", ["LeagueID"], name: "LeagueID", using: :btree
