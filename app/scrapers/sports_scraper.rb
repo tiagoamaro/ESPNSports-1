@@ -80,7 +80,7 @@ class DBSyntax
 
     str += ") VALUES ("
 
-                     #puts opts
+    #puts opts
     opts.each { |k, v|  
       if not v then
         v = ""
@@ -96,7 +96,7 @@ class DBSyntax
     str = str.gsub(/,$/, "")
 
     str += ")"
-                     puts str
+    #puts str
   
     return str 
   end
@@ -184,7 +184,7 @@ class SportsScraper
          "players_table" => "Players_NBA",
          "FriendlyName" => "Basketball",
 				 "LeagueName" => "NBA",
-         "LeagueID" => 1,
+         "LeagueID" => 10,
          ## rules
          ## for finding 
          ## schema information
@@ -269,7 +269,7 @@ class SportsScraper
 
       @entrypoints['NASCAR'] = {
         "url" => "http://espn.go.com/racing/schedule/_/series/nationwide",
-        "LeagueId" => 2,
+        "LeagueId" => 11,
         "espnSchema" => [
           "POS",
           "DRIVER",
@@ -296,7 +296,7 @@ class SportsScraper
         "percents" => {}
       }
       @entrypoints['NFL'] = {
-        "LeagueID" => 3,
+        "LeagueID" => 12,
         "url" =>  "http://scores.espn.go.com/nfl/scoreboard?date=" + @datestr,
         "league_table" =>  "Players_NFL",
         "players_table" => "Players_NFL",
@@ -525,6 +525,7 @@ class SportsScraper
       ##
       @entrypoints['NCB'] = {
         "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=" + @datestr,
+        "LeagueID" => 13,
         "LeagueName" => "NCB",
         "FriendlyName" => "Basketball",
         "espnSchema" => [
@@ -536,6 +537,7 @@ class SportsScraper
       }
       @entrypoints['NCW'] = {
         "url" => "http://scores.espn.go.com/ncw/scoreboard?date=" + @datestr,
+        "LeagueID" => 14,
         "FriendlyName" => "Basketball",
         ## same as NBA
         "espnSchema" => [
@@ -545,7 +547,7 @@ class SportsScraper
       }
 
       @entrypoints['WNBA'] = {
-        "LeagueID" => 6,
+        "LeagueID" => 15,
         "url" => "http://scores.espn.go.com/wnba/scoreboard?date=" + @datestr,
         "FriendlyName" => "Basketball", 
 
@@ -559,7 +561,7 @@ class SportsScraper
         "schema" => {}
       }
       @entrypoints['NCF'] = {
-        "LeagueID" => 7,
+        "LeagueID" => 16,
         "url" => "http://scores.espn.go.com/ncf/scoreboard?date=" + @datestr,
         "FriendlyName" => "Football",
         "LeagueName" => "NCF",
@@ -572,7 +574,7 @@ class SportsScraper
         "schema" => {}      
       }
       @entrypoints['MLS'] = {
-        "LeagueID" => 8,
+        "LeagueID" => 17,
         "url" => "http://www.espnfc.us/scores?date=" + @datestr,
         "BaseURL" => "http://www.espnfc.us/",
         "FriendlyName" => "Soccer",
@@ -614,7 +616,7 @@ class SportsScraper
 
       @entrypoints['PGA'] = {
         "url" => "http://espn.go.com/golf/leaderboard",
-        "LeagueID" => 9,
+        "LeagueID" => 18,
         "FriendlyName" => "Golf",
         "LeagueName" => "PGA",
         "scorePeriods" => [
@@ -649,7 +651,7 @@ class SportsScraper
       }
 
       @entrypoints['MLB'] = {
-        "LeagueID" => 10,
+        "LeagueID" => 19,
         "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
         "FriendlyName" => "Baseball",
         "LeagueName" => "MLB",
@@ -729,7 +731,7 @@ class SportsScraper
          "schema" => {}
       }
       @entrypoints['NHL'] = {
-        "LeagueID" => 11,
+        "LeagueID" => 20,
         "url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
         "league_table" => "Players_NHL",
         "FriendlyName" => "Hockey",
@@ -2322,7 +2324,6 @@ class SportsScraper
 
        url = self.form_url("boxscore", pureGameId)
        puts "Game URL: #{url}"
-       #puts url
 
        ## for testing
        #resp = @client.get(url + gameId)
@@ -2491,21 +2492,6 @@ class SportsScraper
             puts "Game Status: In Progress"
           end
       }
-    
-     if not_started then
-       game = {
-           "ESPNUrl" => url,
-           "Attendance" => attendance,
-           "LeagueID" => @leagueId,
-           "HomeTeamId" => @home_team_id,
-           "AwayTeamId" => @away_team_id,
-           "StartDate" => startDate,
-           "gameId" => gameId,
-           "GameTitle" => gametitle,
-           "InProgress" => inProgress
-       }
-       return self.insert_or_update_game(game)
-     end
 
       home_final_score = 0
       away_final_score = 0
@@ -2574,19 +2560,9 @@ class SportsScraper
           else
             home_info = home.children[1].children[0].children[0]
           end
-            
-          if @league == 'MLB' then
-            awayfull_info = awayfull.children[0]
-            homefull_info = homefull.children[2]
-          else
-            awayfull_info = awayfull.children[0].children[2]
-            homefull_info = homefull.children[1].children[2]
-          end
                      
          away_name = away_info.inner_html
          home_name = home_info.inner_html
-         away_namefull = awayfull_info.inner_text
-         home_namefull = homefull_info.inner_text
          away_team_url = away_info.attr("href")
          home_team_url = home_info.attr("href")
 
@@ -2616,6 +2592,32 @@ class SportsScraper
          ## the quarter points for the first and second
          ## team
 
+         if not_started then
+         game = {
+             "ESPNUrl" => url,
+             "Attendance" => attendance,
+             "LeagueID" => @leagueId,
+             "HomeTeamId" => "#{@leagueId}#{@home_team_id}",
+             "AwayTeamId" => "#{@leagueId}#{@away_team_id}",
+             "StartDate" => startDate,
+             "gameId" => gameId,
+             "GameTitle" => gametitle,
+             "InProgress" => inProgress
+         }
+         return self.insert_or_update_game(game)
+         end
+              
+         if @league == 'MLB' then
+             awayfull_info = awayfull.children[0]
+             homefull_info = homefull.children[2]
+         else
+             awayfull_info = awayfull.children[0].children[2]
+             homefull_info = homefull.children[1].children[2]
+         end
+                     
+         away_namefull = awayfull_info.inner_text
+         home_namefull = homefull_info.inner_text
+                     
          els = parser.xpath("//*[@class='linescore']")
 
          
@@ -2905,8 +2907,7 @@ class SportsScraper
     def game_team_exists(gameId, teamId)
       if teamId then
         q = @db.query("SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}")
-        puts "SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}"
-        puts "eval #{teamId} #{self.eval_count(q)}"
+
         return self.eval_count(q)
       end
 
@@ -2922,7 +2923,7 @@ class SportsScraper
       modifiedDate = createdDate
 
       q = @dbsyntax.insert_str(@db, self.get_players_table(), {
-        "PlayerID" => "#{player['id']}".gsub!(/\D/,""),
+        "PlayerID" => "#{@leagueid}#{player['id']}".gsub!(/\D/,""),
         "PlayerName" => player['name'],
         "ESPNURL" => player['url'],
         "LeagueID" =>  @leagueId,
@@ -3215,9 +3216,6 @@ class SportsScraper
     ## team ids
     def insert_or_update_team(gameId, team)
       teamRet = self.team_exists(team['id'])
-
-      puts "gameId: #{gameId}"
-      puts "teamId: #{team['id']}"
 
       if teamRet then
         if self.game_team_exists(gameId, team['id']) then
