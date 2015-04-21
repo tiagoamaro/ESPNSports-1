@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150421140017) do
+ActiveRecord::Schema.define(version: 20150421173639) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,                 null: false
@@ -59,6 +59,7 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "ModifiedDate"
   end
 
+  add_index "PlayerStats_Baseball", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Baseball_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
   add_index "PlayerStats_Baseball", ["GameID"], name: "GameID", using: :btree
   add_index "PlayerStats_Baseball", ["LeagueID"], name: "LeagueID", using: :btree
   add_index "PlayerStats_Baseball", ["PlayerID"], name: "PlayerID", using: :btree
@@ -90,6 +91,7 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "ModifiedDate"
   end
 
+  add_index "PlayerStats_Basketball", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Basketball_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
   add_index "PlayerStats_Basketball", ["GameID"], name: "GameID", using: :btree
   add_index "PlayerStats_Basketball", ["LeagueID"], name: "LeagueID", using: :btree
   add_index "PlayerStats_Basketball", ["PlayerID"], name: "PlayerID", using: :btree
@@ -145,6 +147,7 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "ModifiedDate"
   end
 
+  add_index "PlayerStats_Football", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Football_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
   add_index "PlayerStats_Football", ["GameID"], name: "GameID", using: :btree
   add_index "PlayerStats_Football", ["LeagueID"], name: "LeagueID", using: :btree
   add_index "PlayerStats_Football", ["PlayerID"], name: "PlayerID", using: :btree
@@ -165,6 +168,8 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "CreatedDate"
     t.datetime "ModifiedDate"
   end
+
+  add_index "PlayerStats_Golf", ["GameID", "PlayerID"], name: "index_PlayerStats_Golf_on_GameID_and_PlayerID", unique: true, using: :btree
 
   create_table "PlayerStats_Hockey", id: false, force: :cascade do |t|
     t.integer  "GameID",         limit: 4,             null: false
@@ -190,6 +195,7 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "ModifiedDate"
   end
 
+  add_index "PlayerStats_Hockey", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Hockey_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
   add_index "PlayerStats_Hockey", ["GameID"], name: "GameID", using: :btree
   add_index "PlayerStats_Hockey", ["LeagueID"], name: "LeagueID", using: :btree
   add_index "PlayerStats_Hockey", ["PlayerID"], name: "PlayerID", using: :btree
@@ -207,6 +213,8 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "CreatedDate"
     t.datetime "ModifiedDate"
   end
+
+  add_index "PlayerStats_Racing", ["GameID", "PlayerID"], name: "index_PlayerStats_Racing_on_GameID_and_PlayerID", unique: true, using: :btree
 
   create_table "PlayerStats_Soccer", id: false, force: :cascade do |t|
     t.integer  "GameID",         limit: 4,             null: false
@@ -227,6 +235,7 @@ ActiveRecord::Schema.define(version: 20150421140017) do
     t.datetime "ModifiedDate"
   end
 
+  add_index "PlayerStats_Soccer", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Soccer_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
   add_index "PlayerStats_Soccer", ["GameID"], name: "GameID", using: :btree
   add_index "PlayerStats_Soccer", ["LeagueID"], name: "LeagueID", using: :btree
   add_index "PlayerStats_Soccer", ["PlayerID"], name: "PlayerID", using: :btree
