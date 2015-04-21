@@ -37,9 +37,10 @@
 #
 # Indexes
 #
-#  GameID    (GameID)
-#  LeagueID  (LeagueID)
-#  TeamID    (TeamID)
+#  GameID                                           (GameID)
+#  LeagueID                                         (LeagueID)
+#  TeamID                                           (TeamID)
+#  index_TeamStats_Basketball_on_GameID_and_TeamID  (GameID,TeamID) UNIQUE
 #
 
 require 'rails_helper'

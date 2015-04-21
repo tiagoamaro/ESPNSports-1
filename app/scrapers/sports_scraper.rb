@@ -127,6 +127,34 @@ class DBSyntax
     #puts str
     return str
   end
+
+  def update_str_with_conditionals(db, table, conditions = {}, data)
+    self.foreign_key_checks_off(db)
+    schema = self.get_schema(db, table)
+    str = String.new("")
+
+    str += "UPDATE `" + table + "` SET "
+    data.each do |k, v|
+      if not v then
+        v = ""
+      end
+      if k and v then
+        str += "`" + String.new(k.to_s) + "`" + " = '" + String.new(v.to_s) + "', "
+      end
+    end
+
+    str = str.gsub(/,\s$/,"")
+
+    unless conditions.empty?
+      where_conditions = conditions.map { |key, value| "`#{key}` = '#{self.escape_val(value.to_s)}'" }
+      where_conditions = where_conditions.join(' AND ')
+
+      str += " WHERE #{where_conditions}"
+    end
+
+    #puts str
+    return str
+  end
 end
 
 ###
@@ -3141,7 +3169,9 @@ class SportsScraper
 
     def update_game_team(gameId, team)
       data = self.get_league_team_schema(team)
-      q = @dbsyntax.update_str(@db, self.get_game_team_table(), "GameID", gameId, data)
+
+      conditions = { 'GameID' => gameId, 'TeamID' => team['id'] }
+      q = @dbsyntax.update_str_with_conditionals(@db, self.get_game_team_table(), conditions, data)
 
       @db.query(q)
       @task_logger.increment(:records_updated)
