@@ -3196,7 +3196,9 @@ class SportsScraper
       end
 
       @playerId = "#{@leagueId}" + "#{@playerId}"
-                     
+
+      player['id'] = "#{@leagueId}" + "#{player['id']}"
+
       pReturn = self.player_exists(@playerId)
 
       if pReturn then
