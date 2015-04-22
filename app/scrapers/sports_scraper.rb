@@ -2868,6 +2868,7 @@ class SportsScraper
     end
 
     def player_exists(playerId)
+                     
       if playerId then
        q = @db.query("SELECT * FROM `Players` WHERE PlayerId = '#{playerId};'")
 
@@ -2886,7 +2887,6 @@ class SportsScraper
     end
     
     def team_exists(teamId)
-    
       if teamId then
         q = @db.query("SELECT * FROM `Teams` WHERE TeamID = '" + teamId + "';") 
         return self.eval_count(q) 
@@ -2923,7 +2923,7 @@ class SportsScraper
       modifiedDate = createdDate
 
       q = @dbsyntax.insert_str(@db, self.get_players_table(), {
-        "PlayerID" => "#{@leagueid}#{player['id']}".gsub!(/\D/,""),
+        "PlayerID" => @playerId,
         "PlayerName" => player['name'],
         "ESPNURL" => player['url'],
         "LeagueID" =>  @leagueId,
@@ -2960,7 +2960,7 @@ class SportsScraper
     def update_player(player)
       time = Time.new
       modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", "#{data['id']}".gsub!(/\D/,""), {
+      q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", @playerId, {
         "ModifiedDate" => modifiedDate
       })
 
@@ -3057,7 +3057,12 @@ class SportsScraper
       if not isUpdate then
         createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
-        pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
+                     
+          if @league == "MLB" then
+            pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
+          else
+            pred['PlayerID'] =  data['id']
+          end
       end
 
       modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -3186,9 +3191,18 @@ class SportsScraper
     ## player ids need to know
     ## there team id
     def insert_or_update_player(gameId, player)
-      pReturn = self.player_exists("#{player['id']}".gsub!(/\D/,""))
+      if @league == "MLB" then
+         @playerId = "#{player['id']}".gsub!(/\D/,"")
+      else
+         @playerId = player['id']
+      end
+
+      @playerId = "#{@leagueId}" + "#{@playerId}"
+                     
+      pReturn = self.player_exists(@playerId)
+
       if pReturn then
-        if self.game_player_exists(gameId, "#{player['id']}".gsub!(/\D/,""))
+        if self.game_player_exists(gameId, @playerId)
           self.update_game_player(gameId, player)
         else
 
