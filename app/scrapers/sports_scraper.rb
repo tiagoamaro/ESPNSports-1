@@ -1524,25 +1524,25 @@ class SportsScraper
 
     def process_baseball_stats(modData) 
 
-
       home_batters = modData[0].children[1]
       home_team_batting = modData[0].children[2]
       away_batters = modData[2].children[1]
       away_team_batting = modData[2].children[2]
       home_pitchers = modData[1].children[1]
       home_team_pitching = modData[1].children[2]
-      away_pitchers = modData[3].children[2]
-      away_team_pitching = modData[3].children[3]
+      away_pitchers = modData[3].children[1]
+      away_team_pitching = modData[3].children[2]
       pitchers_schema = @espnSchemas['Pitchers']
       batters_schema = @espnSchemas['Batters']
       pitchers_trans = @trans['Pitchers']
       batters_trans = @trans['Batters']
       players = {}      
       teams = {}
-    
+
       @csplitters = @splitters['Pitchers']
       home_pitchers_ = self.process_struct_of_data(pitchers_schema, home_pitchers, pitchers_trans, "player")
       away_pitchers_ = self.process_struct_of_data(pitchers_schema, away_pitchers, pitchers_trans, "player")
+                     
       home_pitchers_.each { |pitcher| 
           players = self.generate_player(players, pitcher, @home_team_id)
       }
@@ -1565,10 +1565,9 @@ class SportsScraper
       away_stats = {}
       @csplitters = @splitters['Batters']
       home_batting = self.process_struct_of_data(batters_schema, home_team_batting, batters_trans, "team")
-      home_batting.each { |k,v| 
+      home_batting.each { |k,v|
           home_stats[k] = home_batting[k]
       }
-
 
       @csplitters = @splitters['Pitchers']
       home_pitching = self.process_struct_of_data(pitchers_schema, home_team_pitching, pitchers_trans, "team")
@@ -1578,14 +1577,14 @@ class SportsScraper
 
       @csplitters = @splitters['Batters']
       away_batting = self.process_struct_of_data(batters_schema, away_team_batting, batters_trans, "team")
-
       away_batting.each { |k,v |
-          away_stats[k] = v
+          away_stats[k] = away_batting[k]
       }
+
       @csplitters = @splitters['Pitchers']
       away_pitching = self.process_struct_of_data(pitchers_schema, away_team_pitching,pitchers_trans, "team")
       away_pitching.each { |k,v|
-        away_stats[k] = v
+        away_stats[k] = away_pitching[k]
       }
      
 
@@ -2154,7 +2153,6 @@ class SportsScraper
         
         curdata = {}
 
-                     
         mod.children[0].children.each { |stat| 
           if  cnt >= 1 then
             curdata = process_data_further(cnt - 1, stat, struct, trans, curdata)
