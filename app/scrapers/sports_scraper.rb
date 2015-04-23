@@ -2206,17 +2206,6 @@ end
 
          
      
-
-         if not @leagueFriendlyName == "Baseball"  then
-           totals = els.xpath("//td[contains(@class,'ts')]")
-           home_score = totals[0].inner_html
-           away_score = totals[1].inner_html
-         else
-           totals = els.xpath("//td[contains(@style,'font-weight:bold')]")
-           home_score = totals[3].children[0].inner_text.gsub(/\s+/, "")
-           away_score = totals[4].children[0].inner_text.gsub(/\s+/, "")
-         end
-
          scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
          scores_full = Array.new 
          start = false 
