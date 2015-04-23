@@ -2220,8 +2220,7 @@ end
          scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
          scores_full = Array.new 
          start = false 
-         cnt = 0
-         scores.each { |score|
+         scores.each do |score|
             score = String.new(score.inner_html.gsub(/\s+/, ""))
             if score ==  "T" or score == "9"
               start = true
@@ -2240,9 +2239,7 @@ end
                scores_full.push(0)
               end
             end
-
-            cnt += 1
-         }
+         end
 
 
         
