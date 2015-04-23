@@ -300,7 +300,7 @@ class SportsScraper
         "url" =>  "http://scores.espn.go.com/nfl/scoreboard?date=" + @datestr,
         "league_table" =>  "Players_NFL",
         "players_table" => "Players_NFL",
-				"LeagueName" => "NFL",
+        "LeagueName" => "NFL",
         "FriendlyName" => "Football",
         "playerFinding" => 0,
         "espnSchema" => {
@@ -563,16 +563,16 @@ class SportsScraper
       @entrypoints['NCF'] = {
         "LeagueID" => 16,
         "url" => "http://scores.espn.go.com/ncf/scoreboard?date=" + @datestr,
-        "FriendlyName" => "Football",
-        "LeagueName" => "NCF",
-
-        ## should be same
-        ## as NFL
+         "FriendlyName" => "Football",
+         "LeagueName" => "NCF",
+         
+         ## should be same
+         ## as NFL
          "espnSchema" => [
-
-          ],
-        "schema" => {}      
-      }
+         
+         ],
+         "schema" => {}      
+         }
       @entrypoints['MLS'] = {
         "LeagueID" => 17,
         "url" => "http://www.espnfc.us/scores?date=" + @datestr,
@@ -2576,11 +2576,16 @@ class SportsScraper
          ##
          ## TODO check on new update
          # away_regex_match = away_team_url.match(/\/([\w\-]+)\/?/)
+         if not @league == "NCF" then
          away_regex_match = away_team_url.match(/name\/(\w*)\//)
          @away_acc = away_regex_match[1].upcase
          # home_regex_match = home_team_url.match(/\/([\w\-]+)\/?/)
          home_regex_match = home_team_url.match(/name\/(\w*)\//)
          @home_acc = home_regex_match[1].upcase
+         else
+            @away_acc = ""
+            @home_acc = ""
+         end
          @home_team_id = "#{@leagueId}#{self.get_team_id(home_team_url)}"
          @away_team_id = "#{@leagueId}#{self.get_team_id(away_team_url)}"
 
@@ -2608,13 +2613,20 @@ class SportsScraper
          if @league == 'MLB' then
              awayfull_info = awayfull.children[0]
              homefull_info = homefull.children[2]
-         else
+             away_namefull = awayfull_info.inner_text
+             home_namefull = homefull_info.inner_text
+         elsif @league == 'NHL' || @league == 'NBA'
              awayfull_info = awayfull.children[0].children[2]
              homefull_info = homefull.children[1].children[2]
+             away_namefull = awayfull_info.inner_text
+             home_namefull = homefull_info.inner_text
+         else
+             awayfull_info = away_name
+             homefull_info = home_name
+             away_namefull = awayfull_info
+             home_namefull = homefull_info
          end
                      
-         away_namefull = awayfull_info.inner_text
-         home_namefull = homefull_info.inner_text
                      
          els = parser.xpath("//*[@class='linescore']")
 
@@ -3056,7 +3068,7 @@ class SportsScraper
         createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
                      
-          if @league == "MLB" then
+          if @league == "MLB" || @league == "NFL" || @league == "NCF" then
             pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
           else
             pred['PlayerID'] =  data['id']
@@ -3189,7 +3201,7 @@ class SportsScraper
     ## player ids need to know
     ## there team id
     def insert_or_update_player(gameId, player)
-      if @league == "MLB" then
+      if @league == "MLB" || @league == "NFL" || @league == "NCF" then
          @playerId = "#{player['id']}".gsub!(/\D/,"")
       else
          @playerId = player['id']
