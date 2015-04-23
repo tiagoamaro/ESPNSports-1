@@ -2411,7 +2411,7 @@ class SportsScraper
          ## put to 0 as it can effect the inputted minutes
 
          # startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, startDateHour, startDateMinutes, 0, '+7').strftime("%Y-%m-%d %H:%M:%S")
-         startDate = DateTime.parse(gameTime).strftime("%Y-%m-%d %H:%M:%S")
+         startDate = Time.zone.parse(gameTime).strftime("%Y-%m-%d %H:%M:%S")
        else
          ## match other leagues
          ## here
