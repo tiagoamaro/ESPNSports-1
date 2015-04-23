@@ -2389,29 +2389,29 @@ class SportsScraper
           "December" => 12
        }
        if time_of_match then
-         
          gameTime = time_of_match.children[0].inner_html
          #startDate = Date.parse(gameTime).strftime("%Y-%M-%d  %H:%i:%s")
          puts "Game Time: #{gameTime}"
-         ## matches 
-         ## 
+         ## matches
+         ##
          ## 2:00 PM, April 5, 2015
          ##
-         splitter = gameTime.match(/([\w\d]+):([\d]+).*(AM|PM).*,\s?+([\w]+)\s+?([\d]+),\s+?([\d]+)/)
-         startDateHour = splitter[1].to_i
-         startDateMinutes = splitter[2].to_i 
-         startDateAmOrPm = splitter[3]
-         if startDateAmOrPm == "PM" then
-          startDateHour += 12
-         end
+         # splitter = gameTime.match(/([\w\d]+):([\d]+).*(AM|PM).*,\s?+([\w]+)\s+?([\d]+),\s+?([\d]+)/)
+         # startDateHour = splitter[1].to_i
+         # startDateMinutes = splitter[2].to_i
+         # startDateAmOrPm = splitter[3]
+         # if startDateAmOrPm == "PM" then
+         #  startDateHour += 12
+         # end
 
-         startDateMonth = months[splitter[4]].to_i
-         startDateDate = splitter[5].to_i
-         startDateYear = splitter[6].to_i
+         # startDateMonth = months[splitter[4]].to_i
+         # startDateDate = splitter[5].to_i
+         # startDateYear = splitter[6].to_i
          ## we don't get seconds however
          ## put to 0 as it can effect the inputted minutes
-         startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, startDateHour, startDateMinutes, 0, '+7').strftime("%Y-%m-%d %H:%M:%S")
 
+         # startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, startDateHour, startDateMinutes, 0, '+7').strftime("%Y-%m-%d %H:%M:%S")
+         startDate = DateTime.parse(gameTime).strftime("%Y-%m-%d %H:%M:%S")
        else
          ## match other leagues
          ## here
