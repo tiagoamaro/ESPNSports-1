@@ -1296,7 +1296,7 @@ end
     end
 
 #-----------------------------------------------------------------------------------------------
-def process_baseball_stats(modData)
+def process_baseball_stats(modData, parser)
     home_batters       = modData[0].children[1]
     home_team_batting  = modData[0].children[2]
     away_batters       = modData[2].children[1]
@@ -1363,6 +1363,30 @@ def process_baseball_stats(modData)
         away_stats[k] = away_pitching[k]
     }
 
+    # Runs, Hits and Errors
+    els = parser.xpath("//*[@class='linescore']")
+    teams_totals_rhe = []
+    teams_rhe_html = els.children[2].xpath("//*[contains(@style, 'font-weight:bold')]")
+    teams_rhe_html.each do |data|
+        number_data = data.inner_html.gsub(/\s+/, "")
+        if is_number(number_data)
+            teams_totals_rhe.push(number_data)
+        end
+    end
+
+    teams_rhe_size = teams_totals_rhe.length / 2
+    home_rhe = teams_totals_rhe.slice(0, teams_rhe_size)
+    away_rhe = teams_totals_rhe.slice(teams_rhe_size, teams_totals_rhe.length)
+
+    home_stats['Runs']   = home_rhe[0]
+    home_stats['Hits']   = home_rhe[1]
+    home_stats['Errors'] = home_rhe[2]
+
+    away_stats['Runs']   = away_rhe[0]
+    away_stats['Hits']   = away_rhe[1]
+    away_stats['Errors'] = away_rhe[2]
+
+    # Format stats to return
     team_stats = {}
     team_stats[@home_acc] = home_stats 
     team_stats[@away_acc] = away_stats
@@ -1370,7 +1394,7 @@ def process_baseball_stats(modData)
     return {
         "teams" => team_stats,
         "players" => players
-    }  
+    }
 end
 
 #-----------------------------------------------------------------------------------------------
@@ -2206,22 +2230,10 @@ end
 
          
      
-
-         if not @leagueFriendlyName == "Baseball"  then
-           totals = els.xpath("//td[contains(@class,'ts')]")
-           home_score = totals[0].inner_html
-           away_score = totals[1].inner_html
-         else
-           totals = els.xpath("//td[contains(@style,'font-weight:bold')]")
-           home_score = totals[3].children[0].inner_text.gsub(/\s+/, "")
-           away_score = totals[4].children[0].inner_text.gsub(/\s+/, "")
-         end
-
          scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
          scores_full = Array.new 
          start = false 
-         cnt = 0
-         scores.each { |score|
+         scores.each do |score|
             score = String.new(score.inner_html.gsub(/\s+/, ""))
             if score ==  "T" or score == "9"
               start = true
@@ -2240,14 +2252,8 @@ end
                scores_full.push(0)
               end
             end
+         end
 
-            cnt += 1
-         }
-
-
-        
-         home_scores = Array.new
-         away_scores = Array.new
          team_scores = scores_full.length / 2
          home_scores = scores_full.slice(0, team_scores)
          away_scores = scores_full.slice(team_scores, scores_full.length)
@@ -2320,7 +2326,7 @@ end
           stats = process_hockey_stats(mod_data)
       end
       if @leagueFriendlyName == "Baseball" then
-          stats = process_baseball_stats(mod_data)
+          stats = process_baseball_stats(mod_data, parser)
       end
       if @leagueFriendlyName == "Golf" then
           stats = process_golf_stats(mod_data)
@@ -2666,12 +2672,16 @@ end
      end
 
 
-     @teamSchema.each { |k,v|
-                     
-        if data[k] then
-          pred[k] = data[k]
-        end
-      }
+     # Stats
+     stats = data['stats']
+     @teamSchema.each do |field|
+       ## check for existance
+       ## here
+       schema_key = field[0]
+       if stats[schema_key]
+         pred[schema_key] = stats[schema_key]
+       end
+     end
 
 			## other things
 			## that we will need
