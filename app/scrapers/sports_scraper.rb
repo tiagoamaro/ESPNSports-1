@@ -2254,10 +2254,6 @@ end
             end
          end
 
-
-        
-         home_scores = Array.new
-         away_scores = Array.new
          team_scores = scores_full.length / 2
          home_scores = scores_full.slice(0, team_scores)
          away_scores = scores_full.slice(team_scores, scores_full.length)
