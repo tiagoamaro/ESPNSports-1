@@ -127,7 +127,10 @@ def update_str_with_conditionals(db, table, conditions = {}, data)
 
     return str
 end
-
+                    
+#-----------------------------------------------------------------------------------------------
+end
+                    
 #-----------------------------------------------------------------------------------------------
 class SportsScraper
                     
@@ -1036,7 +1039,7 @@ def process_basketball_stats(mod_data)
         "players"=> players,
         "teams"=> team_stats
       }
-    end
+end
 
 #-----------------------------------------------------------------------------------------------
 def generate_player(players, player, teamId)
@@ -1051,7 +1054,7 @@ def generate_player(players, player, teamId)
         }
                     
         players[name]['teamId'] = teamId
-        end 
+    end
 
     return players
 end
@@ -1747,7 +1750,7 @@ def process_struct_of_data(struct, mod, trans, for_)
       ## team so we don't do this
       ## when we are processing 
       ## then pplayersj
-      if for_ == "player" then
+      if for_ == "player"
         data = [] 
         name = ''
 
@@ -1800,14 +1803,14 @@ def process_struct_of_data(struct, mod, trans, for_)
                   ## reverse count back by one
                   ## as the schemas dont
                   ## need the first placeholder
-                  if cnt > 0  then 
-                    curdata = process_data_further(cnt  -1, stat, struct, trans, curdata)
+                  if cnt > 0
+                    curdata = process_data_further(cnt-1, stat, struct, trans, curdata)
                   end
 
                   ## process the player
                   ## info
 
-                  if cnt == 0  then
+                  if cnt == 0
                     curdata = process_player_info(stat)
                   end
 
@@ -1822,22 +1825,17 @@ def process_struct_of_data(struct, mod, trans, for_)
          end
 
 
-        ## also get the percentages
       else
-        ## start by 1 then first column always says "Team" we don't need it
-        
         cnt = 0
         
         curdata = {}
 
         mod.children[0].children.each { |stat| 
-          if  cnt >= 1 then
+          if  cnt >= 1
             curdata = process_data_further(cnt - 1, stat, struct, trans, curdata)
           end
           cnt += 1
         }
-
-        ## process percventages
          
         curdata = self.process_percentages(curdata)
         data = curdata
@@ -1879,7 +1877,6 @@ end
 
 #-----------------------------------------------------------------------------------------------
 def process_data_further(cnt, stat, struct, trans, curdata)
-
     if @csplitters[struct[cnt]] then
         if @csplitters[struct[cnt]].class.to_s == 'Hash' then
             delimiter = @csplitters[struct[cnt]]['delimiter']
@@ -3040,5 +3037,6 @@ def add_match
 end
 
 #-----------------------------------------------------------------------------------------------
-end
+    end
+
 
