@@ -141,8 +141,8 @@ def initialize(league, task_logger)
     @task_logger = task_logger
 
     @inheritors = {
-        "NBA" => ['WNBA', 'NCAAB', 'NCB', 'NCAAWB', 'NCW'],
-        "NFL" => ['NCAAF', 'NCF']
+        "NBA" => ['WNBA', 'NCB', 'NCW'],
+        "NFL" => ['NCF']
     }
                     
     @entrypoints['NBA'] = {
@@ -566,10 +566,10 @@ def initialize(league, task_logger)
     }
 
       @entrypoints['MLB'] = {
-        "LeagueID" => 19,
         "url" => "http://espn.go.com/mlb/scoreboard?date=" + @datestr,
-        "FriendlyName" => "Baseball",
+        "LeagueID" => 19,
         "LeagueName" => "MLB",
+        "FriendlyName" => "Baseball",
         "scorePeriods" => [
             "Inning_1", 
             "Inning_2",
@@ -645,58 +645,56 @@ def initialize(league, task_logger)
         
          "schema" => {}
       }
-      @entrypoints['NHL'] = {
-        "LeagueID" => 20,
+                    
+    @entrypoints['NHL'] = {
         "url" =>  "http://scores.espn.go.com/nhl/scoreboard?date=" + @datestr,
-        "league_table" => "Players_NHL",
+        "LeagueID" => 20,
+        "LeagueName" => "NHL",
         "FriendlyName" => "Hockey",
-				"LeagueName" => "NHL",
+        "league_table" => "Players_NHL",
         "players_table" => "Leagues_NHL",
         "schema" => {},
         "espnSchema" => { 
             "Players" => [
-              "G",   
-              "A",
-              "+/-",
-              "SOG",
-              "MS",
-              "BS",
-              "PN",
-              "PIM",
-              "HT",
-              "TK",
-              "GV",
-              "SHG",
-              "TOT",
-              "PF",
-              "PP",
-              "EV",
-              "FW",
-              "FL",
-              "%"
+                "G",
+                "A",
+                "+/-",
+                "SOG",
+                "MS",
+                "BS",
+                "PN",
+                "PIM",
+                "HT",
+                "TK",
+                "GV",
+                "SHG",
+                "TOT",
+                "PF",
+                "PP",
+                "EV",
+                "FW",
+                "FL",
+                "%"
             ],
             "Goalies" => [
-              "SA",
-              "GH",
-              "SAVES",
-              "SV%",
-              "TOI",
-              "PM"
+                "SA",
+                "GH",
+                "SAVES",
+                "SV%",
+                "TOI",
+                "PM"
             ]
-          },
-          "scorePeriods" => [
-              "Period_1",
-              "Period_2",
-              "Period_3",
-              "Overtime_1",
-              "Overtime_2"
-    
-          ],
-          "splitters" => {
-
-           },
-          "trans" => {
-              "Players" => {
+        },
+        "scorePeriods" => [
+            "Period_1",
+            "Period_2",
+            "Period_3",
+            "Overtime_1",
+            "Overtime_2"
+        ],
+        "splitters" => {},
+        "trans" => {
+            "Players" => {
                 "SOG" => "ShotsOnGoal",
                 "FW" => "FaceoffsWon",
                 "FL" => "FaceoffsLost",
@@ -708,220 +706,195 @@ def initialize(league, task_logger)
                 "GV" => "Giveaways",
                 "TK" => "Takeaways",
                 "MS" => ""
-              },
-              "Goalies" => {
+            },
+            "Goalies" => {
                 "SAVES" => "Saves",
                 "SA" => "ShotsAgainst",
                 "SOG" => "ShotsOnGoal",
                 "PIM" => "PenaltyMinutes"
-                  ## todo 
-              }
-          },
-          "percents" => {
-              "FaceoffPercent" => {
-                 "type" => "sum",
-                 "data" => ["FaceoffsWon", "FaceoffsLost"],
-                 "matcher" => "FaceoffsWon"  
-              }
-          }
-      }
-      @endpoints = {
+            }
+        },
+        "percents" => {
+            "FaceoffPercent" => {
+                "type" => "sum",
+                "data" => [
+                    "FaceoffsWon",
+                    "FaceoffsLost"
+                ],
+                "matcher" => "FaceoffsWon"  
+            }
+        }
+    }
+                    
+    @endpoints = {
         "stats" =>  1,
         "scoreboard" => 1,
         "tickets" => 1
-      }
-     @league = league
+    }
+                    
+    @league = league
 
-      trans = {
-           "NCAAF" => "NCF",
-           "NCAAB" => "NCB",
-           "NCAAWB" =>  "NCW"
-    
-      } 
-        ## translate any league
-      ## names
-      if trans.keys.include? league then
-          @league = trans[league]
-      end
-
-      if league == "PGA" then
+    if league == "PGA" then
         @match_url = "http://espn.go.com/golf/leaderboard?tournamentId="
-      elsif league == "NASCAR" 
+    elsif league == "NASCAR" 
         @match_url = "http://espn.go.com/racing/raceresults?raceId="
-      elsif league == "MLS" 
+    elsif league == "MLS" 
         @match_url = "http://www.espnfc.us/gamecast/statistics/id/"
-      else
+    else
         @match_url = "http://espn.go.com/{league}/{endpoint}?gameId="
-      end
+    end
 
-      @entrypoint = @entrypoints[@league]
+    @entrypoint = @entrypoints[@league]
+    @leagueId = @entrypoint['LeagueID']
 
+    puts "League: #{@league}"
+    puts "----------------------------------------------------------------------------"
+    @leagueFriendlyName  = @entrypoint['FriendlyName']
+    @scorePeriods = @entrypoint['scorePeriods']
 
-      @leagueId = @entrypoint['LeagueID']
+    @inheritors.each {  |parent, children|
+        keys = ['espnSchema', 'schema', 'percents', 'splitters', 'trans', 'scorePeriods']
+        children.each { |c|
+          if c ==  @league then
+            keys.each {  |k|
+               @entrypoint[k] = @entrypoints[parent][k]
+            }
+          end
+        }
+    }
 
-      puts "League: #{@league}"
-      puts "----------------------------------------------------------------------------"
-      @leagueFriendlyName  = @entrypoint['FriendlyName']
-      @scorePeriods = @entrypoint['scorePeriods']
+    @scorePeriods = @entrypoint['scorePeriods']
 
-      @inheritors.each {  |parent, children|
-          keys = ['espnSchema', 'schema', 'percents', 'splitters', 'trans', 'scorePeriods'] 
-          children.each { |c|
-              if c ==  @league then 
-  
-                keys.each {  |k|
-                   @entrypoint[k] = @entrypoints[parent][k]
-                }
+    rails_db_config = Rails.application.config.database_configuration[Rails.env]
+    @host = rails_db_config['host']
+    @username = rails_db_config['username']
+    @pass = rails_db_config['password']
+    @port = rails_db_config['port']
+    @table = rails_db_config['database']
+    @db = Mysql.connect(@host, @username, @pass, @table)
 
-              end
-          }
+    @espnSchemas = @entrypoint['espnSchema']
+    @percentages = @entrypoint['percents']
+    @splitters = @entrypoint['splitters']
+    @trans = @entrypoint['trans']
+    @playerFinding = @entrypoint['playerFinding']
 
-      } 
+    @dbsyntax = DBSyntax.new()
+    @schema = @dbsyntax.get_schema(@db, "TeamStats_Hockey")
+    @client = Mechanize.new()
 
-      @scorePeriods = @entrypoint['scorePeriods']
+    @entrypoints[@league]['schema']['Player'] = @dbsyntax.get_schema(@db, self.get_game_player_table()) 
+    @playerSchema = @entrypoints[@league]['schema']['Player']
 
-      rails_db_config = Rails.application.config.database_configuration[Rails.env]
-      @host = rails_db_config['host']
-      @username = rails_db_config['username']
-      @pass = rails_db_config['password']
-      @port = rails_db_config['port']
-      @table = rails_db_config['database']
-      @db = Mysql.connect(@host, @username, @pass, @table)
-
-      @espnSchemas = @entrypoint['espnSchema']
-      @percentages = @entrypoint['percents']
-      @splitters = @entrypoint['splitters']
-      @trans = @entrypoint['trans']
-      @playerFinding = @entrypoint['playerFinding']
-
-      @dbsyntax = DBSyntax.new()
-      @schema = @dbsyntax.get_schema(@db, "TeamStats_Hockey")
-      @client = Mechanize.new()
-
-      @entrypoints[@league]['schema']['Player'] = @dbsyntax.get_schema(@db, self.get_game_player_table()) 
-      @playerSchema = @entrypoints[@league]['schema']['Player']
-
-      if not self.is_singular_league() then 
+    if not self.is_singular_league() then 
         @entrypoints[@league]['schema']['Team'] = @dbsyntax.get_schema(@db, self.get_game_team_table())
         @teamSchema = @entrypoints[@league]['schema']['Team']
-      else 
+    else 
         @teamSchema = []
-      end
-    
-      @to_traverse = Array.new()
-      @to_traverse_times = {}
-
     end
 
+    @to_traverse = Array.new()
+    @to_traverse_times = {}
 
-    def get_team_info(teamLink)
+end
 
-        team = @client.get(teamLink)
-        ## todo
-    end
+#-----------------------------------------------------------------------------------------------
+def get_team_info(teamLink)
+    team = @client.get(teamLink)
+    ## todo
+end
 
-    def get_game_if_exists(gameId)
-       query = @db.query("SELECT * FROM `Games` WHERE GameID = '" + gameId + "' LIMIT 1;")
-       game = {}
+#-----------------------------------------------------------------------------------------------
+def get_game_if_exists(gameId)
+    query = @db.query("SELECT * FROM `Games` WHERE GameID = '" + gameId + "' LIMIT 1;")
+    game = {}
 
-       if query.num_rows > 0 then
-         schema = @dbsyntax.get_schema(@db, "Games")
-         vals = 0
+    if query.num_rows > 0 then
+        schema = @dbsyntax.get_schema(@db, "Games")
+        vals = 0
 
-         while row = query.fetch_row
-           cnt = 0
-           row.each do |row_value|
-             if cnt == 0
-               game[schema[vals]] =  row_value
-                 vals += 1
-             end
-           end
-           cnt = 0
-         end
+        while row = query.fetch_row
+            cnt = 0
+            row.each do |row_value|
+                if cnt == 0
+                game[schema[vals]] =  row_value
+                vals += 1
+                end
+            end
+            cnt = 0
+        end
+                    
         return game
-       end
-
-
-       return false
     end
 
-    ## get the team id
-    ## from a given team
-    ## this is available in the
-    ## document via teamId= 
-    def get_team_id(team_url)
-        res = @client.get(team_url)
-        parser = res.parser
-        matches = parser.inner_html.match(/\?teamId=(\d+)/) 
+    return false
+end
 
-        return matches[1]
-    end
+#-----------------------------------------------------------------------------------------------
+def get_team_id(team_url)
+    res = @client.get(team_url)
+    parser = res.parser
+    matches = parser.inner_html.match(/\?teamId=(\d+)/) 
 
+    return matches[1]
+end
 
-    def process_basketball_stats(mod_data)
-			 home_players_1 = mod_data.children[1].children
-			 home_players_2 = mod_data.children[3].children
-			 away_players_1 = mod_data.children[5].children
-			 away_players_2  = mod_data.children[7].children
-		 	 away_players_3 = mod_data.children[9].children
-			 home_players = [] 
-			 away_players = [] 
-       parser = @parser
-       hash = @espnSchemas
-       splitters = @splitters
-       percents = @percentages
-       trans = @trans
+#-----------------------------------------------------------------------------------------------
+def process_basketball_stats(mod_data)
+    home_players_1 = mod_data.children[1].children
+    home_players_2 = mod_data.children[3].children
+    away_players_1 = mod_data.children[5].children
+    away_players_2 = mod_data.children[7].children
+    away_players_3 = mod_data.children[9].children
+                    
+    home_players = [] 
+    away_players = []
+                    
+    parser = @parser
+    hash = @espnSchemas
+    splitters = @splitters
+    percents = @percentages
+    trans = @trans
 			
-       #odd_players = parser.xpath("//tr[contains(@class, 'odd player')]")       
-       #even_players = parser.xpath("//tr[contains(@class, 'even player')]")
-			 home_players_1.each { |player|
-					 home_players.push({
-							"element" => player,
-							"teamId" => @home_team_id
-						})
-			 }
-			 home_players_2.each { |player|
-					home_players.push({
-						"element" => player,
-						"teamId" => @home_team_id
-					})
-			 }
-			 away_players_1.each { |player| 
-					away_players.push({ 
-						"element" => player,
-						"teamId" => @away_team_id
-					})
-			 }
-			 away_players_2.each { |player|
-					away_players.push({
-						"element" => player,
-						"teamId" => @away_team_id
-					})
-			 }
-			away_players_3.each { |player|
-				away_players.push({
-					"element" =>player,
-					"teamId" => @away_team_id
-				})
-			}
+    home_players_1.each { |player|
+        home_players.push({
+            "element" => player,
+            "teamId" => @home_team_id
+        })
+    }
+    home_players_2.each { |player|
+        home_players.push({
+            "element" => player,
+            "teamId" => @home_team_id
+        })
+    }
+    away_players_1.each { |player| 
+        away_players.push({
+            "element" => player,
+            "teamId" => @away_team_id
+        })
+    }
+    away_players_2.each { |player|
+        away_players.push({
+            "element" => player,
+            "teamId" => @away_team_id
+        })
+    }
+    away_players_3.each { |player|
+        away_players.push({
+            "element" =>player,
+            "teamId" => @away_team_id
+        })
+    }
 
-       final_players = home_players + away_players
-       players = {}
-       final_players.each { |player_|
-					player = player_['element']
-					teamId = player_['teamId']
-                     
-          ## needs a way
-          ## of finding
-          ## which team the
-          ## player is one
- 
-        
-          ## first record is always
-          ## there name
-          cnt = 0
-          name = ''
-          stats =  player.children
+    final_players = home_players + away_players
+    players = {}
+    final_players.each { |player_|
+        player = player_['element']
+        teamId = player_['teamId']
+        cnt = 0
+        name = ''
+        stats =  player.children
 					## qwe need to look at the players
 					## name and also what his
 					## stats are. names are found in first
@@ -1065,257 +1038,182 @@ def initialize(league, task_logger)
       }
     end
 
-
-    ## add a new player to 
-    ## the players set
-    ## this should need
-    ## the players info
-    ## and his stats
-    ##
-    def generate_player(players, player, teamId)
-      name = player['name']
-      if name then 
+#-----------------------------------------------------------------------------------------------
+def generate_player(players, player, teamId)
+    name = player['name']
+    if name then 
         if not players[name] then
-          players[name] = {}
+            players[name] = {}
         end
 
         player.each  { |k,v|
-          players[name][k] = v
+            players[name][k] = v
         }
+                    
         players[name]['teamId'] = teamId
-      end 
+        end 
 
-      return players
-    end
+    return players
+end
 
+#-----------------------------------------------------------------------------------------------
+def process_soccer_stats(modData)
+    d =  modData.xpath("table[@class='stat-table']")
+    ## soccer structures need
+    ## needing for there
+    ## data so always skip
+    ## one element whenever
+    ## looking to find 
+    ##
+    home_players =  d[2].children[3]
+    away_players = d[3].children[3]
 
-    ## process soccer stats
-    ## output should look like
-    ##
-    ##  players
-    ##
-    ##
-    ## GameID,LeagueID,TeamID,PlayerID,Goals,Saves,GoalsConceded,Assists,Shots,Tackles,Clearances,Corners,FoulsConceded,FoulsSuffered,YellowCards,RedCards,Penalties,Minutes,CreatedDate,ModifiedDate
-    ##
-    ## teams
-    ##
-    ##
-    ##
-    ## GameID,LeagueID,TeamID,FinalScore,Possession,TackleSuccess,PassAccuracy,TotalShots,ShotsOnGoal,Corners,Saves,Offsides,Fouls,YellowCards,RedCards,CreatedDate,ModifiedDate
-    ##
-    ##
-    ## 
-    ##
-    ## modData is found in two containers
-    ## the first being the
-    ##
-    def process_soccer_stats(modData)
-      d =  modData.xpath("table[@class='stat-table']")
-      ## soccer structures need
-      ## needing for there
-      ## data so always skip
-      ## one element whenever
-      ## looking to find 
-      ##
-      home_players =  d[2].children[3]
-      away_players = d[3].children[3]
- 
-      teams = {} 
-      team_stats = {}     
-      home_stats = {}
-      away_stats = {}
-      final_players = {}
-      final_teams = {}
-      players = process_struct_of_data_soccer(@espnSchemas, home_players, @trans, "player")
-      players.each {  |k, player|
+    teams = {} 
+    team_stats = {}     
+    home_stats = {}
+    away_stats = {}
+    final_players = {}
+    final_teams = {}
+                    
+    players = process_struct_of_data_soccer(@espnSchemas, home_players, @trans, "player")
+    players.each {  |k, player|
+        final_players = self.generate_player(final_players, player, @home_team_id)
+    }
+                    
+    players = process_struct_of_data_soccer(@espnSchemas, away_players, @trans, "players")
+    players.each { |k, player|
+        final_players = self.generate_player(final_players, player, @away_team_id)
+    }
 
-          final_players = self.generate_player(final_players, player, @home_team_id)
-      }
-      players = process_struct_of_data_soccer(@espnSchemas, away_players, @trans, "players")
-      players.each { |k, player|
-           final_players = self.generate_player(final_players, player, @away_team_id)
-      }
-          
-      ## todo find alternativew if possible 
-      ## having the team glossary would be best
-      ## things we are not looking for 
-      look_aside = ['id', 'name', 'url', 'teamId']
-      final_players.each { |player, struct|
-           team_id = player['teamId']  
-           struct.each { |k,v|
+    ## todo find alternativew if possible 
+    ## having the team glossary would be best
+    ## things we are not looking for 
+    look_aside = ['id', 'name', 'url', 'teamId']
+    final_players.each { |player, struct|
+    team_id = player['teamId']  
+    struct.each { |k,v|
+        if look_aside.include? k then
+            next
+        end
+                        
+        if not home_stats[k] then 
+            home_stats[k] = 0
+        end
+                        
+        if not away_stats[k] then
+            away_stats[k] = 0
+        end
 
-              if look_aside.include? k then
-                next
-              end
-              if not home_stats[k] then 
-                home_stats[k] = 0
-              end 
-              if not away_stats[k] then
-                away_stats[k] = 0
-              end
+        val = v.to_f
+                        
+        if team_id == @home_team_id then
+            home_stats[k] += val
+        else
+            away_stats[k] += val
+        end
+        } 
+    }
 
-              val = v.to_f 
-              if team_id == @home_team_id then
-                  home_stats[k] += val 
-              else
-                  away_stats[k] += val
-              end
-           } 
-      }
-
-      teams[@home_acc] = home_stats
-      teams[@away_acc] = away_stats
-      return {
+    teams[@home_acc] = home_stats
+    teams[@away_acc] = away_stats
+                    
+    return {
         "players" => players,
         "teams" => teams 
-      }
-    end
+    }
+end
 
-
-    ## different for soccer
-    ## stats where we need to consider
-    ## things like padding
-    ## for each element 
-    ## team based statistics
-    ## would be processed
-    ## seperatrly
-    ## 
-    ## return playerSet
-    def process_struct_of_data_soccer(schema, data, trans, type)
-       players = {}
-       url_base = 'http://www.espnfc.us/'
-       data.children.each { |player|
-          if player.class.to_s == "Nokogiri::XML::Element" then
+#-----------------------------------------------------------------------------------------------
+def process_struct_of_data_soccer(schema, data, trans, type)
+    players = {}
+    url_base = 'http://www.espnfc.us/'
+    data.children.each { |player|
+        if player.class.to_s == "Nokogiri::XML::Element" then
             stats = player.xpath("td")
-            ## player info would be
-            ## found in area 3
-            ##
-            ##
-         
-            if not stats.children.length>1 then 
-              next
+                    
+            if not stats.children.length>1 then
+                next
             end
+                        
             player_name = stats[2].children[1].inner_html.to_s
             player_link = stats[2].children[1].attr("href")
             player_id = player_link.match(/id\/_\/(\d+)/)
 
-            
             if player_id then
-              player_id = player_id[1]
+                player_id = player_id[1]
             end
 
-          
             players[player_name]= {}  
             players[player_name]['id'] = player_id
             players[player_name]['url'] = url_base + player_link
             players[player_name]['name'] =  player_name
             cnt = 0
-            stats.each {  |stat|
-
-                ## we need to skip
-                ## all the text elements
-                ## this is 
-                ##
+                    
+            stats.each { |stat|
                 if not stat.class.to_s == "Nokogiri::XML::Element" then
-                  next
+                    next
                 end
+                    
                 if cnt ==  2 then
-                  ## skip the name we have it
-                  cnt += 1 
-                  next
+                    cnt += 1
+                    next
                 end
 
                 stat = stat.inner_html
-                ## MLS adds extra padding
-                ## we need to take this out
-                ##
                 stat = stat.gsub(/\n|\r|\s+/, "")
 
                 if trans[schema[cnt]] then
-                  players[player_name][trans[schema[cnt]]] = stat 
+                    players[player_name][trans[schema[cnt]]] = stat
                 end
 
                 cnt += 1
-
             }
-          end
-       }
-        #puts players
+        end
+    }
 
-      return players
-    end
-    ## process racing stats 
-    ## output should look like
-    ##
-    ##
-    ## GameID,LeagueID,PlayerID,StartPlace,FinishPlace,LapsComplete,LapsLed,Winnings,CreatedDate,ModifiedDate
-    ##
-    ##
-    ##
-    ## we can find the player stats
-    ## by looking at the
-    ## odd players and even players
-    ## we will also merge these
-    ##
-    def process_racing_stats(modData)
+    return players
+end
 
-        odd_players = modData.xpath("//tr[contains(@class, 'oddrow player')]")
-        even_players = modData.xpath("//tr[contains(@class, 'everow player')]")
-        players_final = {}
-        players = odd_players + even_players
-        schema = @espnSchemas
-        ## player stats can be found
-        ## in the driver column
-        ## when 
-        ##
-        base_url = 'http://espn.go.com'
-        players.each { |player|
-          stats = player.xpath("td")
-          name = stats[1].children[0].inner_html
-          link = stats[1].children[0].attr("href")
-          id = link.match(/_\/id\/(\d+)/)
-      
-          players_final[name] = {}
-          players_final[name]['url'] =  base_url + link
-          players_final[name]['id'] = id[1]
-          cnt = 0
-          #puts stats
-          stats.each { |stat|
-            if cnt == 1 then 
-              cnt += 1
-              next
+#-----------------------------------------------------------------------------------------------
+def process_racing_stats(modData)
+    odd_players  = modData.xpath("//tr[contains(@class, 'oddrow player')]")
+    even_players = modData.xpath("//tr[contains(@class, 'everow player')]")
+                    
+    players_final = {}
+    players = odd_players + even_players
+                    
+    schema = @espnSchemas
+    base_url = 'http://espn.go.com'
+                    
+    players.each { |player|
+        stats = player.xpath("td")
+        name = stats[1].children[0].inner_html
+        link = stats[1].children[0].attr("href")
+        id = link.match(/_\/id\/(\d+)/)
+
+        players_final[name] = {}
+        players_final[name]['url'] =  base_url + link
+        players_final[name]['id'] = id[1]
+        cnt = 0
+                    
+        stats.each { |stat|
+            if cnt == 1 then
+                cnt += 1
+                next
             end
 
             players_final[name][@trans[schema[cnt]]] = stat.inner_html
             cnt += 1
-          }
         }
+    }
 
-      ## important for the players
-      ## whena  gamer is over the posittion
-      ## becomes the 'FinalPosition'
-      ##
-      ##
-
-      return {
+    return {
         "players" => players_final,
         "teams" => {}
-      }
-    end
+    }
+end
 
-    ## process golf 
-    ## stats out should
-    ## look like
-    ##
-    ## GameID,LeagueID,PlayerID,Position,Round_1,Round_2,Round_3,Round_4,ToPar,Strokes,MissedCut,CreatedDate,ModifiedDate
-    ##
-    ##
-    ## player stats should be found in
-    ## the  xpath element @id contain player-
-    #
-    ##
-    ##
-    ##
+#-----------------------------------------------------------------------------------------------
     def process_golf_stats(modData)
         elem = ""
         players = modData.xpath("//tr[contains(@id, 'player-')]")
@@ -1394,104 +1292,85 @@ def initialize(league, task_logger)
       }
     end
 
-    ## tables should look like
-    ## 0 => home hitters
-    ## 1 => away hitters
-    ## 2 => home pitchers
-    ## 3 => away pitchers
-    ## 4 scoring  
-    ##
+#-----------------------------------------------------------------------------------------------
+def process_baseball_stats(modData)
+    home_batters       = modData[0].children[1]
+    home_team_batting  = modData[0].children[2]
+    away_batters       = modData[2].children[1]
+    away_team_batting  = modData[2].children[2]
+    home_pitchers      = modData[1].children[1]
+    home_team_pitching = modData[1].children[2]
+    away_pitchers      = modData[3].children[1]
+    away_team_pitching = modData[3].children[2]
+                    
+    pitchers_schema = @espnSchemas['Pitchers']
+    batters_schema  = @espnSchemas['Batters']
+    pitchers_trans  = @trans['Pitchers']
+    batters_trans   = @trans['Batters']
+                    
+    players = {}      
+    teams = {}
 
-    def process_baseball_stats(modData) 
+    @csplitters = @splitters['Pitchers']
+    home_pitchers_ = self.process_struct_of_data(pitchers_schema, home_pitchers, pitchers_trans, "player")
+    away_pitchers_ = self.process_struct_of_data(pitchers_schema, away_pitchers, pitchers_trans, "player")
 
-      home_batters = modData[0].children[1]
-      home_team_batting = modData[0].children[2]
-      away_batters = modData[2].children[1]
-      away_team_batting = modData[2].children[2]
-      home_pitchers = modData[1].children[1]
-      home_team_pitching = modData[1].children[2]
-      away_pitchers = modData[3].children[1]
-      away_team_pitching = modData[3].children[2]
-      pitchers_schema = @espnSchemas['Pitchers']
-      batters_schema = @espnSchemas['Batters']
-      pitchers_trans = @trans['Pitchers']
-      batters_trans = @trans['Batters']
-      players = {}      
-      teams = {}
+    home_pitchers_.each { |pitcher| 
+        players = self.generate_player(players, pitcher, @home_team_id)
+    }
+    away_pitchers_.each { |pitcher| 
+        players = self.generate_player(players, pitcher, @away_team_id)
+    }
 
-      @csplitters = @splitters['Pitchers']
-      home_pitchers_ = self.process_struct_of_data(pitchers_schema, home_pitchers, pitchers_trans, "player")
-      away_pitchers_ = self.process_struct_of_data(pitchers_schema, away_pitchers, pitchers_trans, "player")
-                     
-      home_pitchers_.each { |pitcher| 
-          players = self.generate_player(players, pitcher, @home_team_id)
-      }
-      away_pitchers_.each { |pitcher| 
-          players = self.generate_player(players, pitcher, @away_team_id)
-      }
+    @csplitters = @splitters['Batters']
+    home_batters_ = self.process_struct_of_data(batters_schema, home_batters, batters_trans, "player")
+    away_batters_ = self.process_struct_of_data(batters_schema, away_batters, batters_trans, "player")
+                    
+    home_batters_.each { |batter|
+        players = self.generate_player(players, batter, @home_team_id)
+    }
+    away_batters_.each { |batter|
+        players = self.generate_player(players, batter, @away_team_id)
+    }
 
-      @csplitters = @splitters['Batters']
+    home_stats = {}
+    away_stats = {}
+                    
+    @csplitters = @splitters['Batters']
+    home_batting = self.process_struct_of_data(batters_schema, home_team_batting, batters_trans, "team")
+    home_batting.each { |k,v|
+        home_stats[k] = home_batting[k]
+    }
 
-      home_batters_ = self.process_struct_of_data(batters_schema, home_batters, batters_trans, "player")
-      away_batters_ = self.process_struct_of_data(batters_schema, away_batters, batters_trans, "player")
-      home_batters_.each { |batter|
-          players = self.generate_player(players, batter, @home_team_id)
-      }
-      away_batters_.each { |batter|
-          players = self.generate_player(players, batter, @away_team_id)
-      }
+    @csplitters = @splitters['Pitchers']
+    home_pitching = self.process_struct_of_data(pitchers_schema, home_team_pitching, pitchers_trans, "team")
+    home_pitching.each { |k,v | 
+        home_stats[k] = home_pitching[k]
+    }
 
-      home_stats = {}
-      away_stats = {}
-      @csplitters = @splitters['Batters']
-      home_batting = self.process_struct_of_data(batters_schema, home_team_batting, batters_trans, "team")
-      home_batting.each { |k,v|
-          home_stats[k] = home_batting[k]
-      }
+    @csplitters = @splitters['Batters']
+    away_batting = self.process_struct_of_data(batters_schema, away_team_batting, batters_trans, "team")
+    away_batting.each { |k,v |
+        away_stats[k] = away_batting[k]
+    }
 
-      @csplitters = @splitters['Pitchers']
-      home_pitching = self.process_struct_of_data(pitchers_schema, home_team_pitching, pitchers_trans, "team")
-      home_pitching.each { |k,v | 
-          home_stats[k] = home_pitching[k]
-      }
-
-      @csplitters = @splitters['Batters']
-      away_batting = self.process_struct_of_data(batters_schema, away_team_batting, batters_trans, "team")
-      away_batting.each { |k,v |
-          away_stats[k] = away_batting[k]
-      }
-
-      @csplitters = @splitters['Pitchers']
-      away_pitching = self.process_struct_of_data(pitchers_schema, away_team_pitching,pitchers_trans, "team")
-      away_pitching.each { |k,v|
+    @csplitters = @splitters['Pitchers']
+    away_pitching = self.process_struct_of_data(pitchers_schema, away_team_pitching,pitchers_trans, "team")
+    away_pitching.each { |k,v|
         away_stats[k] = away_pitching[k]
-      }
-     
+    }
 
-      team_stats = {}
-      team_stats[@home_acc] = home_stats 
-      team_stats[@away_acc] = away_stats
+    team_stats = {}
+    team_stats[@home_acc] = home_stats 
+    team_stats[@away_acc] = away_stats
 
-      ## now process the
-      ## teams
-      ##
-
-      return {
+    return {
         "teams" => team_stats,
         "players" => players
-      }  
-    end
+    }  
+end
 
-
-    ## indice 4 and 5
-    ## contain the needed
-    ## data for players
-    ##
-    ## for teams we need to look
-    ## in indice 9 and 10
-    ##
-    ## 9 => Shots On Goal
-    ## 10 => power play summarry
+#-----------------------------------------------------------------------------------------------
     def process_hockey_stats(modData)
       players = {}
       teams = {}
@@ -1629,70 +1508,11 @@ def initialize(league, task_logger)
           "teams" => teams
       }
     end
-
-    ## output of stats should resemble this
-    ## structure:
-    ##
-    ##
-    ## Teams:
-    ## GameID,LeagueID,TeamID,Quarter_1,Quarter_2,Quarter_3,Quarter_4,Overtime_1,Overtime_2,FinalScore,FirstDowns,TotalYards,Turnovers,TotalPlays,RushingYards,TotalRushes,TotalPassingYards,Sacks,Interceptions,Punts,Penalties,PenaltyYards,Fumbles,FumblesLost,CreatedDate,ModifiedDate
-    ##
-    ## Players:
-    ##
-    ## 
-    ##
-    ## GameID,LeagueID,TeamID,PlayerID,PassingCompletions,PassingAttempts,PassingYards,PassingCompletionsPct,PassingSacks,PassingTDs,PassingInterceptions,PassingRating,PassingFumbles,RushingAttemps,RushingYards,RushingLong,RushingTDs,RushingFumbles,ReceivingCatches,ReceivingTargets,ReceivingYards,ReceivingLong,ReceivingTDs,ReceivingFumbles,KickingXPMade,KickingXPAttempts,KickingFGMade,KickingFGAttempts,KickingLong,KickingPoints,Punts,KickReturns,KickReturnYards,KickReturnLong,KickReturnTDs,PuntReturns,PuntReturnYards,PuntReturnLong,PuntReturnTDs,DefenseTackles,DefenseAssists,DefenseSacks,DefenseYardsLost,DefensePassesDefended,DefenseInterceptions,DefenseIntYards,DefenseIntTDs,CreatedDate,ModifiedDate
-    ##
-    ##
-    ##
-    ## modData is seperated as follows
-    ## the first two containers we can 
-    ## ignore
-    ##
-    ## format follows:
-    ## home, away
-
-    ##
-    ##
-    ## we're counting by 1
-    ## please keep in mind implementation starts at 0
-
-    ## 2, full team stats
-    ## 3, -- passing
-    ## 5,6 -- rushing
-    ## 7,8 -- receiving
-    ## 9,10 -- defensivu
-    ## 10, 11 -- interceptions
-    ## 12, 13 -- kick returns
-    ## 14, 15  -- punt returns
-    ## 16, 17 -- kicking 
-    ## 18, 19 -- punting
-
-    ##
-    ## each modData should 
-    ## also have its team stats directly below
-    ## PLAYER_DATA
-    ## TEAM_DATA
-  
-    def process_football_stats(modData)
-
-      ## process passingf
-      ##
-      ## should look like:
-      ##
-      ## C/ATT YDS AVG TD  INT SACKS QBR RTG
-      ## T. Brady  37/50 328 6.6 4 2 1-8 81.1  101.1
-      ##
-      ##  Team
-      ## 
+                    
+#-----------------------------------------------------------------------------------------------
+def process_football_stats(modData)
       teams = {}
-      lookups = ['Passing', 'Rushing', 'Receiving', 'Defense', 'Interceptions', 'Punting', 'Kicking', 'Punt Returns', 'Kick Returns'] 
-
-
-      ## treat NCF 
-      ## and NFL different
-      ## NCF does not show all stats
-      ##
+      lookups = ['Passing', 'Rushing', 'Receiving', 'Defense', 'Interceptions', 'Punting', 'Kicking', 'Punt Returns', 'Kick Returns']
 
       full_team_stats = modData[1].children[1]
       if @league == "NFL" then
@@ -1876,13 +1696,8 @@ def initialize(league, task_logger)
       }
     end
 
-
-    ## process the player info
-    ## which should bereturning
-    ##
-    ## td>a[href='link']{text}
-    ##
-    def process_player_info(data)
+#-----------------------------------------------------------------------------------------------
+def process_player_info(data)
       link = nil
       id = nil
       name = nil
@@ -1924,8 +1739,8 @@ def initialize(league, task_logger)
     ## process_struct_of_data({STRUCT}, 'team')  =>
     ##  data 
     ##
-
-    def process_struct_of_data(struct, mod, trans, for_)
+#-----------------------------------------------------------------------------------------------
+def process_struct_of_data(struct, mod, trans, for_)
 
     
       ## last row is always 
@@ -2031,125 +1846,102 @@ def initialize(league, task_logger)
       return data
     end
 
-    def process_percentages(curdata)
+#-----------------------------------------------------------------------------------------------
+def process_percentages(curdata)
+    @percentages.each { |k, percent|
+        if percent['type'] == 'data' then
+            data = percent['data']
+            matcher = curdata[percent['matcher']].to_f
+            sum = 0
+                        
+            data.each { |d|
+                sum += curdata[percent[d]].to_f
+            }
 
-         @percentages.each { |k, percent| 
-
-            if percent['type'] == 'data' then 
-              data = percent['data']
-              matcher = curdata[percent['matcher']].to_f
-              sum = 0 
-              data.each { |d|
-                  sum += curdata[percent[d]].to_f
-              }
-              
-              percent_rtg = (matcher / sum) * 100 
-              curdata[k] = percent_rtg.to_s + "%"
-            else
-              upper = curdata[percent['upper']].to_f
-              lower = curdata[percent['lower']].to_f
-              percent_rtg = "0"
-              if upper > 0 then
+            percent_rtg = (matcher / sum) * 100 
+            curdata[k] = percent_rtg.to_s + "%"
+        else
+            upper = curdata[percent['upper']].to_f
+            lower = curdata[percent['lower']].to_f
+            percent_rtg = "0"
+                        
+            if upper > 0 then
                 percent_rtg = (lower / upper) * 100
                 percent_rtg = String.new(percent_rtg.to_s)
-              end
-
-              curdata[k] = percent_rtg + "%"
-            end
-          }
-
-        return curdata
-
-    end
-
-
-    ## take the set okf data 
-    ## and process it according to schema rules
-    ##
-    def process_data_further(cnt, stat, struct, trans, curdata)
-        
-         if @csplitters[struct[cnt]] then
-            if @csplitters[struct[cnt]].class.to_s == 'Hash' then 
-                delimiter = @csplitters[struct[cnt]]['delimiter']
-            else
-                delimiter = "-"
             end
 
-            check = @csplitters[struct[cnt]]['data']
-     
-            matches = stat.inner_html.match('(\d+)\\' + delimiter + '(\d+)')
-
-            if matches then
-              first = check[0]
-              second = check[1]
-              curdata[first] = matches[1]
-              curdata[second] = matches[2]
-            end
-
-         else
-            if trans[struct[cnt]] then
-              curdata[trans[struct[cnt]]] = stat.inner_html
-            end
-         end
-
-
-        #puts curdata
-
-      return curdata
-    end
-
-
-    ## forms the ESPN url, where 
-    ## we need a secion and league
-    ## and gameId
-    ##
-    def form_url(area, gameId)
-        url = String.new(@match_url)
-        url = url.gsub(/\{endpoint\}/, area)
-        url = url.gsub(/\{league\}/, @league.downcase)
-         
-        if @leagueFriendlyName == "Soccer" then
-          return url + gameId + "/statistics.html"
+            curdata[k] = percent_rtg + "%"
         end
-        
-        return url + gameId
+    }
+
+    return curdata
+end
+
+#-----------------------------------------------------------------------------------------------
+def process_data_further(cnt, stat, struct, trans, curdata)
+
+    if @csplitters[struct[cnt]] then
+        if @csplitters[struct[cnt]].class.to_s == 'Hash' then
+            delimiter = @csplitters[struct[cnt]]['delimiter']
+        else
+            delimiter = "-"
+        end
+
+        check = @csplitters[struct[cnt]]['data']
+
+        matches = stat.inner_html.match('(\d+)\\' + delimiter + '(\d+)')
+
+        if matches then
+            first = check[0]
+            second = check[1]
+            curdata[first] = matches[1]
+            curdata[second] = matches[2]
+        end
+
+        else
+            if trans[struct[cnt]] then
+                curdata[trans[struct[cnt]]] = stat.inner_html
+            end
+        end
+
+    return curdata
+end
+
+#-----------------------------------------------------------------------------------------------
+def form_url(area, gameId)
+    url = String.new(@match_url)
+    url = url.gsub(/\{endpoint\}/, area)
+    url = url.gsub(/\{league\}/, @league.downcase)
+
+    if @leagueFriendlyName == "Soccer" then
+        return url + gameId + "/statistics.html"
     end
 
-    def get_nascar_id(cup_name)
-      id = ""
-      alpha = ('a' .. 'z');
+    return url + gameId
+end
 
-      name = cup_name.match(/([A-Za-z]+)$/)[1]
+#-----------------------------------------------------------------------------------------------
+def get_nascar_id(cup_name)
+    id = ""
+    alpha = ('a' .. 'z');
 
-      name.split("").each { |w|
+    name = cup_name.match(/([A-Za-z]+)$/)[1]
+
+    name.split("").each { |w|
         cnt = 0
+                    
         alpha.each { |a|  
             if a  == w then
-              id += cnt.to_s 
+                id += cnt.to_s
             end
-            cnt += 1
+                cnt += 1
         }
-      }
+    }
 
-     return id.to_s
-      
-    end
-    ## look at the match
-    ## and retrieve all information
-    ##
-    ## this should be relative to
-    ## the sport and league
-    
-    ## start with the scoreboard
-    ## look at the following 
-    ##
-    ## scoreboard,
-    ## stats
-    ## boxscore
-    ## inProgress map
-    ## 1 => inProgress
-    ## -1 => not begun
-    ## 0 => over
+    return id.to_s
+end
+                    
+#-----------------------------------------------------------------------------------------------
     def parse_match(gameId)
       
        
@@ -2587,124 +2379,112 @@ def initialize(league, task_logger)
       self.insert_or_update_game(game)
     end
 
-
-    def insert_or_update_game(game)
-     if game['InProgress'] == 1
-      @task_logger.increment(:games_in_progress)
-     end
-
-     if not self.game_id_exists(game['gameId']) then
-      return self.insert_game(game)
-     else
-      return self.update_game(game)
-     end
+#-----------------------------------------------------------------------------------------------
+def insert_or_update_game(game)
+    if game['InProgress'] == 1
+        @task_logger.increment(:games_in_progress)
     end
 
-    ## check whether  
-    ## we have already
-    ## stored data for this
-    ## or not
-    def game_id_exists(gameId)
-      if gameId then
+    if not self.game_id_exists(game['gameId']) then
+        return self.insert_game(game)
+    else
+        return self.update_game(game)
+    end
+end
+
+#-----------------------------------------------------------------------------------------------
+def game_id_exists(gameId)
+    if gameId then
         q = @db.query("SELECT * FROM `Games` where GameId = '" + gameId + "'")
         return self.eval_count(q)       
-      end
-
-
-      return -1
     end
 
-    ## update a game needs
-    ## the game hash object
-    ## @param game:
-    ## game->teams
-    ## game->players
-    ##
-   ## on success this will insert
-    ## data in the following tables
-    ## league.games
-    ## league.teams
-    ## league.players
-    def update_game(game)
-      time = Time.new
-      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      updateStr = @dbsyntax.update_str(@db, "Games", "GameID", game['gameId'], {
+    return -1
+end
+
+#-----------------------------------------------------------------------------------------------
+def update_game(game)
+    time = Time.new
+    modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+    updateStr = @dbsyntax.update_str(@db, "Games", "GameID", game['gameId'], {
         "InProgress" => game['InProgress'],
         "ModifiedDate" => modifiedDate
-      })
+    })
 
-      @db.query(updateStr)
-      @task_logger.increment(:records_updated)
+    @db.query(updateStr)
+    @task_logger.increment(:records_updated)
 
-      ## insert team stats
-      if not game['InProgress'] == -1 then
+    if not game['InProgress'] == -1 then
         if not self.is_singular_league() then
-          self.insert_or_update_team(game['gameId'], game['teams']['home'])
-          self.insert_or_update_team(game['gameId'], game['teams']['away'])
+            self.insert_or_update_team(game['gameId'], game['teams']['home'])
+            self.insert_or_update_team(game['gameId'], game['teams']['away'])
         end
 
         game['players'].each { |k, player|
-           self.insert_or_update_player(game['gameId'], player)
+            self.insert_or_update_player(game['gameId'], player)
         }
-      end
     end
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def player_exists(playerId)
+    if playerId then
+        q = @db.query("SELECT * FROM `Players` WHERE PlayerId = '#{playerId};'")
 
-    def player_exists(playerId)
-                     
-      if playerId then
-       q = @db.query("SELECT * FROM `Players` WHERE PlayerId = '#{playerId};'")
-
-       return eval_count(q)
-      end
-      return -1 
+        return eval_count(q)
     end
-
-    def eval_count(rows)
-
-      if rows.num_rows > 0 then
-         return true
-      else
-         return false
-      end
+                    
+    return -1 
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def eval_count(rows)
+    if rows.num_rows > 0 then
+        return true
+    else
+        return false
     end
-    
-    def team_exists(teamId)
-      if teamId then
-        q = @db.query("SELECT * FROM `Teams` WHERE TeamID = '" + teamId + "';") 
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def team_exists(teamId)
+    if teamId then
+        q = @db.query("SELECT * FROM `Teams` WHERE TeamID = '" + teamId + "';")
         return self.eval_count(q) 
-      end
-     
-      return -1
     end
 
-    def game_player_exists(gameId, playerId)
-     if playerId then
-       q = @db.query("SELECT * FROM `" + self.get_game_player_table() + "` WHERE PlayerId = '" + playerId + "' AND GameId = '" + gameId + "'")
+    return -1
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def game_player_exists(gameId, playerId)
+    if playerId then
+        q = @db.query("SELECT * FROM `" + self.get_game_player_table() + "` WHERE PlayerId = '" + playerId + "' AND GameId = '" + gameId + "'")
 
-       return self.eval_count(q)
-     end
-      return -1
+        return self.eval_count(q)
     end
-
-    def game_team_exists(gameId, teamId)
-      if teamId then
+    return -1
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def game_team_exists(gameId, teamId)
+    if teamId then
         q = @db.query("SELECT * FROM #{self.get_game_team_table()} WHERE TeamID = #{teamId} AND GameID = #{gameId}")
 
         return self.eval_count(q)
-      end
-
-      return -1
     end
 
-    ## needs
-    #implementation
-    ## using the fields
-    def insert_player(player)
-      time = Time.new
-      createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      modifiedDate = createdDate
+    return -1
+end
 
-      q = @dbsyntax.insert_str(@db, self.get_players_table(), {
+#-----------------------------------------------------------------------------------------------
+def insert_player(player)
+    time = Time.new
+    createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
+    modifiedDate = createdDate
+
+    q = @dbsyntax.insert_str(@db, self.get_players_table(), {
         "PlayerID" => @playerId,
         "PlayerName" => player['name'],
         "ESPNURL" => player['url'],
@@ -2712,52 +2492,53 @@ def initialize(league, task_logger)
         "TeamID" => player['teamId'],
         "CreatedDate" =>  createdDate,
         "ModifiedDate" => modifiedDate
-      })
-                     
-      @db.query(q)
-      @task_logger.increment(:records_inserted)
-    end
+    })
+     
+    @db.query(q)
+    @task_logger.increment(:records_inserted)
+end
 
-   
-    ## checks whether the league 
-    ## is a singular or team based
-    def is_singular_league()
-      if @leagueFriendlyName == "Golf" or @leagueFriendlyName == "Racing" then
+#-----------------------------------------------------------------------------------------------
+def is_singular_league()
+    if @leagueFriendlyName == "Golf" or @leagueFriendlyName == "Racing" then
         return true
-      end
-
-      return false
     end
 
+    return false
+end
 
-    def insert_game_player(gameId, player)
-      data = self.get_league_player_schema(player)
+#-----------------------------------------------------------------------------------------------
+def insert_game_player(gameId, player)
+    data = self.get_league_player_schema(player)
 
-      q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
+    q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
 
-      @task_logger.increment(:records_inserted)
-      return @db.query(q)
-    end
-
-    def update_player(player)
-      time = Time.new
-      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", @playerId, {
+    @task_logger.increment(:records_inserted)
+    return @db.query(q)
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def update_player(player)
+    time = Time.new
+    modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+    q = @dbsyntax.update_str(@db, self.get_players_table(), "PlayerID", @playerId, {
         "ModifiedDate" => modifiedDate
-      })
+    })
 
-      return @db.query(q)
-    end
+    return @db.query(q)
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def update_game_player(gameId, player)
+    data = self.get_league_player_schema(player, true)
+    q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
 
-    def update_game_player(gameId, player)
-
-      data = self.get_league_player_schema(player, true)
-      q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
-
-      @task_logger.increment(:records_updated)
-			return @db.query(q)
-    end
-
+    @task_logger.increment(:records_updated)
+    return @db.query(q)
+end
+                    
+#-----------------------------------------------------------------------------------------------
     def insert_team(team)
       time = Time.new
       createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -2776,11 +2557,12 @@ def initialize(league, task_logger)
       @task_logger.increment(:records_inserted)
       return @db.query(q)
     end
-
-    def update_team(team)
-      time = Time.new
-      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      q = @dbsyntax.update_str(@db, self.get_teams_table(), {
+#-----------------------------------------------------------------------------------------------
+def update_team(team)
+    time = Time.new
+    modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+    q = @dbsyntax.update_str(@db, self.get_teams_table(), {
         "TeamID"  => team['id'],
         "TeamPrefix" => team['prefix'],
         "TeamName" => team['name'],
@@ -2788,88 +2570,73 @@ def initialize(league, task_logger)
         "LeagueID" => @leagueId,
         "ESPNUrl" => team['url'],
         "ModifiedDate "=> modifiedDate
-      })
-      return @db.query(q)
-    end
+    })
+                    
+    return @db.query(q)
+end
 
-    def get_game_team_table()
-      return "TeamStats_" + @leagueFriendlyName
-    end
+#-----------------------------------------------------------------------------------------------
+def get_game_team_table()
+    return "TeamStats_" + @leagueFriendlyName
+end
 
-    def get_teams_table()
-      return "Teams"
-    end
+#-----------------------------------------------------------------------------------------------
+def get_teams_table()
+    return "Teams"
+end
 
-    def get_players_table()
-      return "Players"  
-    end
-  
-    def get_game_player_table()
-      return "PlayerStats_" + @leagueFriendlyName
-    end
+#-----------------------------------------------------------------------------------------------
+def get_players_table()
+    return "Players"
+end
 
-    def get_game_team_table()
-      return "TeamStats_" + @leagueFriendlyName
-    end
+#-----------------------------------------------------------------------------------------------
+def get_game_player_table()
+    return "PlayerStats_" + @leagueFriendlyName
+end
 
-    ## switch schemas 
-    ## according to 
-    ## the league 
-    ## param 
-    ## @param data
-    ## set of parameters
-    ## that satify this schema
-    ## things that are always
-    ## there should be
-    ## CreatedDate, ModifiedDate
-    def get_league_player_schema(data, isUpdate=false)
-      pred = {}
+#-----------------------------------------------------------------------------------------------
+def get_game_team_table()
+    return "TeamStats_" + @leagueFriendlyName
+end
 
-      ## player schemas
-      ## for matches
-      ## are usually stat based
+#-----------------------------------------------------------------------------------------------
+def get_league_player_schema(data, isUpdate=false)
+    pred = {}
 
-       @playerSchema.each { |k,v|
-          if data[k] then
+    @playerSchema.each { |k,v|
+        if data[k] then
             pred[k] = data[k]
-          end
-       } 
-      time = Time.new 
-      if not isUpdate then
+        end
+    }
+                    
+    time = Time.new
+    modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+    if not isUpdate then
         createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
-                     
-          if @league == "MLB" || @league == "NFL" || @league == "NCF" then
+
+        if @league == "MLB" || @league == "NFL" || @league == "NCF" then
             pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
-          else
+        else
             pred['PlayerID'] =  data['id']
-          end
-      end
-
-      modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      ## we also
-      ## need game id, league id and team id
-      ## createdDate and modified date
-      pred['GameId'] = @currentGame['gameId'] 
-      if not  self.is_singular_league() then
+        end
+    end
+                
+    if not self.is_singular_league() then
         pred['TeamId'] = data['teamId']
-      end
-      pred['LeagueId'] = @leagueId
-      pred['CreatedDate'] = createdDate
-      pred['ModifiedDate'] = modifiedDate
-      return pred
-	  end
-
-    ## switch schemas 
-    ## according
-    ## @data => set of parameters that satisfy
-    ## this schema
-    ##
-    ##
-    ## @params data will be a teamblob
-    ## scores in it can be traversed until either
-    ## 0 or nil
-    ## is met this tells us which Quarter we're in
+    end
+                    
+    pred['GameId'] = @currentGame['gameId']
+    pred['LeagueId'] = @leagueId
+    pred['CreatedDate'] = createdDate
+    pred['ModifiedDate'] = modifiedDate
+                    
+    return pred
+end
+                    
+#-----------------------------------------------------------------------------------------------
     def get_league_team_schema(data, isUpdate=false)
 
       pred = {}
@@ -2933,105 +2700,92 @@ def initialize(league, task_logger)
       return pred
     end
 
-    ## insert the 
-    ## game stats for
-    ## this team
-    ## we can find
-    ## this information
-    ## in the stats field we
-    ## also need to match
-    ## our schema with that
-    ## of the League
-    def insert_game_team(gameId, team)
-      data = self.get_league_team_schema(team)
-puts data
-      q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
+#-----------------------------------------------------------------------------------------------
+def insert_game_team(gameId, team)
+    data = self.get_league_team_schema(team)
+    puts data
+    q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
-      @db.query(q)
-      @task_logger.increment(:records_inserted)
+    @db.query(q)
+    @task_logger.increment(:records_inserted)
+end
+
+#-----------------------------------------------------------------------------------------------
+def update_game_team(gameId, team)
+    data = self.get_league_team_schema(team)
+
+    conditions = {
+        'GameID' => gameId,
+        'TeamID' => team['id']
+    }
+    q = @dbsyntax.update_str_with_conditionals(@db, self.get_game_team_table(), conditions, data)
+
+    @db.query(q)
+    @task_logger.increment(:records_updated)
+end
+
+#-----------------------------------------------------------------------------------------------
+def insert_or_update_player(gameId, player)
+    if @league == "MLB" || @league == "NFL" || @league == "NCF" then
+        @playerId = "#{player['id']}".gsub!(/\D/,"")
+    else
+        @playerId = player['id']
     end
 
-    def update_game_team(gameId, team)
-      data = self.get_league_team_schema(team)
+    @playerId = "#{@leagueId}" + "#{@playerId}"
 
-      conditions = { 'GameID' => gameId, 'TeamID' => team['id'] }
-      q = @dbsyntax.update_str_with_conditionals(@db, self.get_game_team_table(), conditions, data)
+    player['id'] = "#{@leagueId}" + "#{player['id']}"
 
-      @db.query(q)
-      @task_logger.increment(:records_updated)
-    end
+    pReturn = self.player_exists(@playerId)
 
-
-    def insert_or_update_player(gameId, player)
-      if @league == "MLB" || @league == "NFL" || @league == "NCF" then
-         @playerId = "#{player['id']}".gsub!(/\D/,"")
-      else
-         @playerId = player['id']
-      end
-
-      @playerId = "#{@leagueId}" + "#{@playerId}"
-
-      player['id'] = "#{@leagueId}" + "#{player['id']}"
-
-      pReturn = self.player_exists(@playerId)
-
-      if pReturn then
+    if pReturn then
         if self.game_player_exists(gameId, @playerId)
-             self.update_game_player(gameId, player)
+            self.update_game_player(gameId, player)
         else
-             self.insert_game_player(gameId, player)
+            self.insert_game_player(gameId, player)
         end
-      else  
-
+    else
         if pReturn == -1 then
-          ## undetermined
-          ## behavoir we need
-          ## the program's
-          ## player id
+        ## undetermined
         else
-             self.insert_player(player)
-             self.insert_game_player(gameId, player)
+            self.insert_player(player)
+            self.insert_game_player(gameId, player)
         end
-      end
     end
+end
 
-    ## these need to update
-    ## the teams based on their
-    ## team ids
-    def insert_or_update_team(gameId, team)
-      teamRet = self.team_exists(team['id'])
+#-----------------------------------------------------------------------------------------------
+def insert_or_update_team(gameId, team)
+    teamRet = self.team_exists(team['id'])
 
-      if teamRet then
+    if teamRet then
         if self.game_team_exists(gameId, team['id']) then
-          self.update_game_team(gameId, team)
+            self.update_game_team(gameId, team)
         else
-          self.insert_game_team(gameId, team) 
+            self.insert_game_team(gameId, team)
         end
-      else 
+    else
         if teamRet == -1 then
-          ## undefined
-          ##
+            ## undefined
         else
-          self.insert_team(team)
-          self.insert_game_team(gameId, team)
+            self.insert_team(team)
+            self.insert_game_team(gameId, team)
         end
-      end  
-    end
+    end  
+end
 
-    ## same as above
-    ## needs the game
-    ## hash object
-    def insert_game(game)
-       time = Time.new
-       
-       startDate = time.strftime("%Y-%m-%d %H:%M:%S")
-       modifiedDate = startDate
-       createdDate = startDate
-   
-       
-       insertStr = @dbsyntax.insert_str(@db, "Games", {
+#-----------------------------------------------------------------------------------------------
+def insert_game(game)
+    time = Time.new
+
+    startDate = time.strftime("%Y-%m-%d %H:%M:%S")
+    modifiedDate = startDate
+    createdDate = startDate
+
+
+    insertStr = @dbsyntax.insert_str(@db, "Games", {
         "GameId" => game['gameId'],
-		"LeagueID" => game['LeagueID'],
+        "LeagueID" => game['LeagueID'],
         "InProgress" => game['InProgress'],
         "ESPNUrl" => game['ESPNUrl'],
         "HomeTeamId" => game['HomeTeamId'],
@@ -3041,32 +2795,24 @@ puts data
         "ModifiedDate" => modifiedDate,
         "CreatedDate" => createdDate,
         "StartDate" => game['StartDate'] 
-       })
+    })
 
-       @db.query(insertStr)
-       @task_logger.increment(:records_inserted)
+    @db.query(insertStr)
+    @task_logger.increment(:records_inserted)
 
-       ##insert the team stats
-       if not game['InProgress'] == -1 then
+    if not game['InProgress'] == -1 then
+        if not self.is_singular_league() then
+            self.insert_or_update_team(game['gameId'], game['teams']['home'])
+            self.insert_or_update_team(game['gameId'], game['teams']['away'])
+        end
 
-         if not self.is_singular_league() then
-           self.insert_or_update_team(game['gameId'], game['teams']['home'])
-           self.insert_or_update_team(game['gameId'], game['teams']['away'])
-         end
-
-         ## insert the player stats 
-
-         game['players'].each { |k, player|
-          self.insert_or_update_player(game['gameId'], player)
-         }
-       end
+        game['players'].each { |k, player|
+            self.insert_or_update_player(game['gameId'], player)
+        }
     end
-    ## start the scraper
-    ## this should on success
-    ##  look at all the matches
-    ## for this league and 
-    ## return the results
-    ## accordingly
+end
+
+#-----------------------------------------------------------------------------------------------
     def start 
        url = @entrypoint['url']
        result = @client.get(url)
@@ -3267,26 +3013,32 @@ puts data
    
     end
 
-
-    def is_college_league()
-      if @league == "NCF" or @league == "NCW" or @league == "NCB" then
-       return true
-      end
-      return false
+#-----------------------------------------------------------------------------------------------
+def is_college_league()
+    if @league == "NCF" or @league == "NCW" or @league == "NCB" then
+        return true
     end
+                    
+    return false
+end
 
-    def make_time()
-        ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
-    end
+#-----------------------------------------------------------------------------------------------
+def make_time()
+    ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
+end
 
-    def update_match(opts)
-        str = @dbsyntax.update_str(@db, @league_table,opts)
-        @db.query(str)
-    end
+#-----------------------------------------------------------------------------------------------
+def update_match(opts)
+    str = @dbsyntax.update_str(@db, @league_table,opts)
+    @db.query(str)
+end
 
-    def add_match
-        str = @dbsyntax.insert_str(@db, @league_table, opts)
-        @db.query(str)
-    end
+#-----------------------------------------------------------------------------------------------
+def add_match
+    str = @dbsyntax.insert_str(@db, @league_table, opts)
+    @db.query(str)
+end
+
+#-----------------------------------------------------------------------------------------------
 end
 
