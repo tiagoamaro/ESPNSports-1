@@ -2652,12 +2652,16 @@ end
      end
 
 
-     @teamSchema.each { |k,v|
-                     
-        if data[k] then
-          pred[k] = data[k]
-        end
-      }
+     # Stats
+     stats = data['stats']
+     @teamSchema.each do |field|
+       ## check for existance
+       ## here
+       schema_key = field[0]
+       if stats[schema_key]
+         pred[schema_key] = stats[schema_key]
+       end
+     end
 
 			## other things
 			## that we will need
