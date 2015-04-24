@@ -3057,8 +3057,7 @@ class SportsScraper
       ## for matches
       ## are usually stat based
 
-       @playerSchema.each { |k|
-
+       @playerSchema.each { |k,v|
           if data[k] then
             pred[k] = data[k]
           end
