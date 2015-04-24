@@ -2,232 +2,191 @@ require "mysql"
 require "nokogiri"
 require "mechanize"
 
-## TODO
-## when stats are hyphen
-## seperated they need to follow
-## the following logic
-## MADE-ATTEMPTED
-##
-## i.e.
-## 3PT_Made
-## 3PT_Attempted
-##
-## currentGame variable
-## always be the variable
-## we are processing currently
-
-
-## these fields will be seperated
-## in thedatabase so, you need to add the field
-## schema logic
-
-
-## add is_number to 
-## string methods
+#-----------------------------------------------------------------------------------------------
 def is_number(number)
   true if Float(number) rescue false
 end
 
-###
-## Update, insert strings
-## around the MySQL object
-##
-class DBSyntax 
+#-----------------------------------------------------------------------------------------------
+class DBSyntax
 
-  def get_schema(db, table)
+#-----------------------------------------------------------------------------------------------
+def get_schema(db, table)
 
     sql = "EXPLAIN " + table
     schema = {}
     rows = db.query(sql)
     rows_ = Array.new
 
-    ## get the whole
-    ## schema as an array
-
     while row = rows.fetch_row
-      rows_.push(row)
+          rows_.push(row)
     end
 
     return rows_
-  end
+end
 
-  def foreign_key_checks_off(db)
-     db.query("SET FOREIGN_KEY_CHECKS=0;")
-  end
-  def escape_val(val)
-     return val.gsub(/'/, "\\'")
-  end
-  ## insert something
-  ## into the database
-  ## @param table a table
-  ## belonging to the database
-  ##
-  def insert_str(db, table, opts)
+#-----------------------------------------------------------------------------------------------
+def foreign_key_checks_off(db)
     db.query("SET FOREIGN_KEY_CHECKS=0;")
+end
+
+#-----------------------------------------------------------------------------------------------
+def escape_val(val)
+    return val.gsub(/'/, "\\'")
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def insert_str(db, table, opts)
+    db.query("SET FOREIGN_KEY_CHECKS=0;")
+                    
     str = String.new("")
     str += "INSERT INTO `" +  table + "` ("
-    schema = self.get_schema(db, table)
-   
-    opts.each { |k,v|  
-      if not v then
-        v = ""
-      end
-      if k then 
-        str += "`" + String.new(k.to_s) + "`,"
-      end
-    }
-    str = str.gsub(/,$/, "")
+        schema = self.get_schema(db, table)
+
+        opts.each { |k,v|
+          if not v then
+            v = ""
+          end
+          if k then 
+            str += "`" + String.new(k.to_s) + "`,"
+          end
+        }
+                    
+        str = str.gsub(/,$/, "")
 
     str += ") VALUES ("
 
-    #puts opts
-    opts.each { |k, v|  
-      if not v then
-        v = ""
-      end
-      if k and v then
-        str += "'" + String.new(self.escape_val(v.to_s)) + "',"
-      end
-      if not v then
-        str += "'',"
-      end
-      
-    }
-    str = str.gsub(/,$/, "")
+        opts.each { |k, v|
+          if not v then
+            v = ""
+          end
+          if k and v then
+            str += "'" + String.new(self.escape_val(v.to_s)) + "',"
+          end
+          if not v then
+            str += "'',"
+          end
+        }
+                        
+        str = str.gsub(/,$/, "")
 
     str += ")"
-    #puts str
-  
-    return str 
-  end
 
-  ## update str 
-  ## 
-  ## @param table a table belonging
-  ## to the database
-  ## @opts list of parameters belonging to the tables schema
-  def update_str(db, table, key, value, opts)
+    return str
+end
+                    
+#-----------------------------------------------------------------------------------------------
+def update_str(db, table, key, value, opts)
     self.foreign_key_checks_off(db)
+                    
     schema = self.get_schema(db, table)
     str = String.new("")
 
     str += "UPDATE `" + table + "` SET "
-    opts.each { |k, v|
-      if not v then
-        v = ""
-      end
-      if k and v then    
-        str += "`" + String.new(k.to_s) + "`" + " = '" + String.new(v.to_s) + "', "
-      end
-    } 
-	 	str = str.gsub(/,\s$/,"")
+        opts.each { |k, v|
+          if not v then
+            v = ""
+          end
+          if k and v then    
+            str += "`" + String.new(k.to_s) + "`" + " = '" + String.new(v.to_s) + "', "
+          end
+        } 
+        str = str.gsub(/,\s$/,"")
 
     str += " WHERE " + "`" + String.new(key.to_s) + "` = '" + String.new(self.escape_val(value.to_s)) + "'"
 
-    #puts str
     return str
-  end
+end
 
-  def update_str_with_conditionals(db, table, conditions = {}, data)
+#-----------------------------------------------------------------------------------------------
+def update_str_with_conditionals(db, table, conditions = {}, data)
     self.foreign_key_checks_off(db)
+                    
     schema = self.get_schema(db, table)
     str = String.new("")
 
     str += "UPDATE `" + table + "` SET "
+                    
     data.each do |k, v|
-      if not v then
-        v = ""
-      end
-      if k and v then
-        str += "`" + String.new(k.to_s) + "`" + " = '" + String.new(v.to_s) + "', "
-      end
+         if not v then
+            v = ""
+         end
+         if k and v then
+            str += "`" + String.new(k.to_s) + "`" + " = '" + String.new(v.to_s) + "', "
+         end
     end
 
     str = str.gsub(/,\s$/,"")
 
     unless conditions.empty?
-      where_conditions = conditions.map { |key, value| "`#{key}` = '#{self.escape_val(value.to_s)}'" }
-      where_conditions = where_conditions.join(' AND ')
+        where_conditions = conditions.map { |key, value| "`#{key}` = '#{self.escape_val(value.to_s)}'" }
+        where_conditions = where_conditions.join(' AND ')
 
-      str += " WHERE #{where_conditions}"
+        str += " WHERE #{where_conditions}"
     end
 
-    #puts str
     return str
-  end
 end
 
-###
-## Main scraper
-## should retrieve information
-## given the 
-## league 
-class SportsScraper 
-    def initialize(league, task_logger)
-      @entrypoints = {}
+#-----------------------------------------------------------------------------------------------
+class SportsScraper
+                    
+#-----------------------------------------------------------------------------------------------
+def initialize(league, task_logger)
+    @entrypoints = {}
 
-      @datestr = self.make_time()
-      puts "----------------------------------------------------------------------------"
-      puts "Current Date: #{@datestr}"
-      @task_logger = task_logger
-                     
-      @inheritors = {
+    @datestr = self.make_time()
+    puts "----------------------------------------------------------------------------"
+    puts "Current Date: #{@datestr}"
+    @task_logger = task_logger
+
+    @inheritors = {
         "NBA" => ['WNBA', 'NCAAB', 'NCB', 'NCAAWB', 'NCW'],
         "NFL" => ['NCAAF', 'NCF']
-      }
-      @entrypoints['NBA'] = {
-          ## this should
-          ## be the entry point
-         "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
-
-         "league_table" => "Players_NBA",
-         "players_table" => "Players_NBA",
-         "FriendlyName" => "Basketball",
-				 "LeagueName" => "NBA",
-         "LeagueID" => 10,
-         ## rules
-         ## for finding 
-         ## schema information
-         ## generate this
-        ## once qwe've connected to
-        ## the database
-         "schema" => {},
-         "espnSchema" => [
-          "Placeholder",
-          "Player Profile",
-          "Min",
-          "FGM-A",
-          "3PM-A",
-          "FTM-A",
-          "OREB",
-          "DREB",
-          "REB",
-          "AST",
-          "STL",
-          "BLK",
-          "TO",
-          "PF",
-          "Plus Minus",
-          "PTS"
-          ],
-         "splitters" => {
+    }
+                    
+    @entrypoints['NBA'] = {
+        "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
+        "LeagueID" => 10,
+        "LeagueName" => "NBA",
+        "FriendlyName" => "Basketball",
+        "league_table" => "Players_NBA",
+        "players_table" => "Players_NBA",
+        "schema" => {},
+        "espnSchema" => [
+            "Placeholder",
+            "Player Profile",
+            "Min",
+            "FGM-A",
+            "3PM-A",
+            "FTM-A",
+            "OREB",
+            "DREB",
+            "REB",
+            "AST",
+            "STL",
+            "BLK",
+            "TO",
+            "PF",
+            "Plus Minus",
+            "PTS"
+        ],
+        "splitters" => {
             "FGM-A" => [
-                 "FGMade",
-                 "FGTaken"
-             ],
-             "3PM-A" => [
-                 "ThreePtMade",
-                 "ThreePtTaken"
-             ],
-             "FTM-A" => [
-                 "FTMade",
-                 "FTTaken"
-             ]
-          },
-
-         "trans" => {
+                "FGMade",
+                "FGTaken"
+            ],
+            "3PM-A" => [
+                "ThreePtMade",
+                "ThreePtTaken"
+            ],
+            "FTM-A" => [
+                "FTMade",
+                "FTTaken"
+            ]
+        },
+        "trans" => {
             "Placeholder" => "",
-            "Min" => "GameStatus", ## no implementation
             "FGM-A" => "", ## done by splitters
             "3PM-A" => "", ## done by splitters
             "FTM-A" => "", ## done by splitters
@@ -237,26 +196,23 @@ class SportsScraper
             "AST" => "Assists",
             "BLK" => "Blocks",
             "TO" => "Turnovers",
-            "PF" => "PersonalFouls",
-            "Plus Minus" => ""
-         },
-
-         "percents" => {
-             "FTPercent" => {
-               "lower" => "FTMade",
-               "upper" => "FTTaken"
-             },   
+            "PF" => "PersonalFouls"
+        },
+        "percents" => {
+            "FTPercent" => {
+            "lower" => "FTMade",
+            "upper" => "FTTaken"
+            },
             "FGPercent" => {
-               "lower" => "FGMade",
-               "upper" => "FGTaken"
+                "lower" => "FGMade",
+                "upper" => "FGTaken"
             },
             "ThreePtPercent" => {
-               "lower" => "ThreePtMade",
-               "upper" => "ThreePtTaken"
+                "lower" => "ThreePtMade",
+                "upper" => "ThreePtTaken"
             }
-         },
-
-         "scorePeriods" => [
+        },
+        "scorePeriods" => [
             "Quarter_1",
             "Quarter_2",
             "Quarter_3",
@@ -264,136 +220,125 @@ class SportsScraper
             "Overtime_1",
             "Overtime_2",
             "Overtime_3"
-         ] 
-      }
+        ]
+    }
 
-      @entrypoints['NASCAR'] = {
+    @entrypoints['NASCAR'] = {
         "url" => "http://espn.go.com/racing/schedule/_/series/nationwide",
         "LeagueId" => 11,
-        "espnSchema" => [
-          "POS",
-          "DRIVER",
-          "CAR",
-          "MANUFACTURER",
-          "LAPS",
-          "MONEY",
-          "START",
-          "LED",
-          "PTS",
-          "PENALTY"
-        ],
         "LeagueName" => "NASCAR",
         "FriendlyName" => "Racing",
+        "espnSchema" => [
+            "POS",
+            "DRIVER",
+            "CAR",
+            "MANUFACTURER",
+            "LAPS",
+            "MONEY",
+            "START",
+            "LED",
+            "PTS",
+            "PENALTY"
+        ],
         "trans" => {
-          "POS" => "Position",
-          "LAPS" => "LapsComplete",
-          "LED" => "LapsLed",
-          "MONEY" => "Winnings",
-          "START" => "StartPlace",
-          "PENALTY" => "Penalty"
+            "POS" => "Position",
+            "LAPS" => "LapsComplete",
+            "LED" => "LapsLed",
+            "MONEY" => "Winnings",
+            "START" => "StartPlace",
+            "PENALTY" => "Penalty"
         },
         "schema" => {},
         "percents" => {}
-      }
-      @entrypoints['NFL'] = {
-        "LeagueID" => 12,
+    }
+                    
+    @entrypoints['NFL'] = {
         "url" =>  "http://scores.espn.go.com/nfl/scoreboard?date=" + @datestr,
-        "league_table" =>  "Players_NFL",
-        "players_table" => "Players_NFL",
+        "LeagueID" => 12,
         "LeagueName" => "NFL",
         "FriendlyName" => "Football",
+        "league_table" =>  "Players_NFL",
+        "players_table" => "Players_NFL",
         "playerFinding" => 0,
         "espnSchema" => {
-       
-            "Passing" => [ 
-               "C/ATT", 
-               "YDS",
-               "AVG",
-               "TD",
-               "INT",
-               "SACKS",
-               "QBR",
-               "RTG"
-             ],
+            "Passing" => [
+                "C/ATT",
+                "YDS",
+                "AVG",
+                "TD",
+                "INT",
+                "SACKS",
+                "QBR",
+                "RTG"
+            ],
             "Rushing" => [
-              "CAR",
-              "YDS",
-              "AVG", 
-              "TD",
-              "LD"
+                "CAR",
+                "YDS",
+                "AVG", 
+                "TD",
+                "LD"
             ],
-
             "Receiving" => [
-              "REC",
-              "YDS",
-              "AVG",
-              "TD",
-              "LG",
-              "TGTS"
+                "REC",
+                "YDS",
+                "AVG",
+                "TD",
+                "LG",
+                "TGTS"
             ],
-
             "Defensive" => [
-              "TOT",
-              "SOLO",
-              "SACKS",
-              "TFL",
-              "PD",
-              "QB HITS",
-              "TD"
+                "TOT",
+                "SOLO",
+                "SACKS",
+                "TFL",
+                "PD",
+                "QB HITS",
+                "TD"
             ],
-    
             "Interceptions" => [
-              "INT",
-              "YDS",
-              "AVG",
-              "LG",
-              "TD"
+                "INT",
+                "YDS",
+                "AVG",
+                "LG",
+                "TD"
             ],
-
             "Returns" => [
-              "NO",
-             "YDS",
-              "AVG",
-              "LG",
-              "TD"
+                "NO",
+                "YDS",
+                "AVG",
+                "LG",
+                "TD"
             ],
-
-
             "Kick Returns" => [
-              "NO",
-              "YDS",
-              "AVG",
-              "LG",
-              "TD"
+                "NO",
+                "YDS",
+                "AVG",
+                "LG",
+                "TD"
             ],
             "Punt Returns" => [
-
-              "NO",
-              "YDS",
-              "AVG",
-              "LG",
-              "TD"
+                "NO",
+                "YDS",
+                "AVG",
+                "LG",
+                "TD"
             ],
-
             "Kicking" => [
-              "FG",
-              "PCT",
-              "LONG",
-              "XP",
-              "PTS"
+                "FG",
+                "PCT",
+                "LONG",
+                "XP",
+                "PTS"
             ],
-
             "Punting" => [
-              "NO",
-              "YDS",
-              "AVG",
-              "TB",
-              "-20",
-              "LG"
+                "NO",
+                "YDS",
+                "AVG",
+                "TB",
+                "-20",
+                "LG"
             ]
-
         },
-
         "trans" => {
             "General" => {
                 "1st Downs" => "FirstDowns",
@@ -406,39 +351,35 @@ class SportsScraper
                 "Turnovers" => "",
                 "Fumbles lost" => "FumblesLost",
                 "Interceptions Thrown" => ""
-  
-             },
+            },
             "Passing" => {
-               "TD" =>  "PassingTDs",
-               "INT" => "PassingInterceptions",
-               "RTG" => "PassingRTG",
-               "SACKS" => "PassingSacks"
+                "TD" =>  "PassingTDs",
+                "INT" => "PassingInterceptions",
+                "RTG" => "PassingRTG",
+                "SACKS" => "PassingSacks"
             },
             "Rushing" => {
-              "TD" => "RushingTDs",
-              "LG" => "RushingLong",
-              "YD" => "RushingYards",
+                "TD" => "RushingTDs",
+                "LG" => "RushingLong",
+                "YD" => "RushingYards",
             },
             "Receiving" => {
-              "REC" => "ReceivingCatches",
-              "YD" => "ReceivingYards",
-              "LG" => "ReceivingLong",
-              "TD" => "ReceivingTDs",
-              "TGTS" => "ReceivingTargets",
+                "REC" => "ReceivingCatches",
+                "YD" => "ReceivingYards",
+                "LG" => "ReceivingLong",
+                "TD" => "ReceivingTDs",
+                "TGTS" => "ReceivingTargets",
             },
             "Defensive" => {
-              "SACKS" => "DefenseSacks",
-              "SOLO" => "DefenseSolos",
-              "TDS" => "DefenseIntTDS",
-              "PD" => "DefensePassesDefended",
-              "QB HTS" => "",
-              #"TFL" => "DefenseTackles",
-              "TOT" => "DefenseTackles"
+                "SACKS" => "DefenseSacks",
+                "SOLO" => "DefenseSolos",
+                "TDS" => "DefenseIntTDS",
+                "PD" => "DefensePassesDefended",
+                "QB HTS" => "",
+                "TOT" => "DefenseTackles"
             },
             "Interceptions" => {
-               "INT" => "DefenseInterceptions",
-               #"YDS" => "InterceptionYards",
-               #"TD" => "InterceptionTDs"
+                "INT" => "DefenseInterceptions"
             },
             "Punt Returns" => {
                 "TD" => "PuntReturnTDs",
@@ -448,15 +389,13 @@ class SportsScraper
                 "TD" => ""
             },
             "Kick Returns" => {
-              "NO" => "KickReturns",
-              "FG" => "",
-              #"PCT" => "",
-              #"LONG" => "",
-              "XP" => "",
-              "LG" => "KickReturnLong",
-              "TDS" => "KickReturnTDs",
-              "YDS" => "KickReturnYards",
-              "PTS" => ""
+                "NO" => "KickReturns",
+                "FG" => "",
+                "XP" => "",
+                "LG" => "KickReturnLong",
+                "TDS" => "KickReturnTDs",
+                "YDS" => "KickReturnYards",
+                "PTS" => ""
             },
             "Kicking" => {
                 "FG" => "",
@@ -466,189 +405,165 @@ class SportsScraper
                 "PTS" => ""
             },
             "Punting" => {
-              "NO" => "Punts",
-              "YDS" => "PuntYards",
-              "AVG" => "",
-              "TB" => "",
-              "TB/s" => "",
-              "-20" => "",
-              "LG" => ""
+                "NO" => "Punts",
+                "YDS" => "PuntYards",
+                "AVG" => "",
+                "TB" => "",
+                "TB/s" => "",
+                "-20" => "",
+                "LG" => ""
             }
-            
         },
         "splitters" => {
             "Kicking" => {
-              "FG" => {
-                  "data" => [
-                     "KickingFGAttempts", 
-                     "KickingFGMade"
-                  ],
-                  "delimiter" => "/"
-              }
-            },  
-
-            "Passing" => {
-              "C/ATT" => { "data" => [
-                "PassingCompletions",
-                "PassingAttempts"
-                ],
+                "FG" => {
+                    "data" => [
+                        "KickingFGAttempts",
+                        "KickingFGMade"
+                    ],
                 "delimiter" => "/"
-              } 
-            }
-        },
-
-        "percents" => {
-            "KickingFGPct" => {
-              "lower" => "KickingFGMade",
-              "upper" => "KickingFGAttempted"
+                }
             },
-            "PassingCompletionPct" => {
-              "lower" => "PassingCompletions",
-              "upper" => "PassingAttempts"
-            }
-        },
+            "Passing" => {
+                "C/ATT" => {
+                    "data" => [
+                        "PassingCompletions",
+                        "PassingAttempts"
+                    ],
+                    "delimiter" => "/"
+                    }
+                }
+            },
+            "percents" => {
+                "KickingFGPct" => {
+                    "lower" => "KickingFGMade",
+                    "upper" => "KickingFGAttempted"
+                },
+                "PassingCompletionPct" => {
+                    "lower" => "PassingCompletions",
+                    "upper" => "PassingAttempts"
+                }
+            },
+            "scorePeriods" => [
+                "Quarter_1",
+                "Quarter_2",
+                "Quarter_3",
+                "Quarter_4",
+                "Overtime_1",
+                "Overtime_2"
+            ],
+            "schema" => {}
+        }
 
-        "scorePeriods" => [
-            "Quarter_1", 
-            "Quarter_2",
-            "Quarter_3",
-            "Quarter_4",
-            "Overtime_1",
-            "Overtime_2"
-        ],
 
-        "schema" => {}
-      }
-
-
-      ## same as NBA
-      ##
-      @entrypoints['NCB'] = {
+    @entrypoints['NCB'] = {
         "url"  => "http://scores.espn.go.com/ncb/scoreboard?date=" + @datestr,
         "LeagueID" => 13,
         "LeagueName" => "NCB",
         "FriendlyName" => "Basketball",
-        "espnSchema" => [
-        ],
+        "espnSchema" => [],
         "trans" => {},
-        "schema" => {} 
-
-      
-      }
-      @entrypoints['NCW'] = {
+        "schema" => {}
+    }
+                    
+    @entrypoints['NCW'] = {
         "url" => "http://scores.espn.go.com/ncw/scoreboard?date=" + @datestr,
         "LeagueID" => 14,
+        "LeagueName" => "NCW",
         "FriendlyName" => "Basketball",
-        ## same as NBA
-        "espnSchema" => [
-
-        ],
+        "espnSchema" => [],
         "schema" => {}
-      }
+    }
 
-      @entrypoints['WNBA'] = {
-        "LeagueID" => 15,
+    @entrypoints['WNBA'] = {
         "url" => "http://scores.espn.go.com/wnba/scoreboard?date=" + @datestr,
-        "FriendlyName" => "Basketball", 
-
-         ## same as NBA
-        "espnSchema" => [
-
-         ],
-
+        "LeagueID" => 15,
+        "LeagueName" => "WNBA",
+        "FriendlyName" => "Basketball",
+        "espnSchema" => [],
         "percents" => {},
         "splitters" => {},
         "schema" => {}
-      }
-      @entrypoints['NCF'] = {
-        "LeagueID" => 16,
+    }
+                    
+    @entrypoints['NCF'] = {
         "url" => "http://scores.espn.go.com/ncf/scoreboard?date=" + @datestr,
-         "FriendlyName" => "Football",
-         "LeagueName" => "NCF",
-         
-         ## should be same
-         ## as NFL
-         "espnSchema" => [
-         
-         ],
-         "schema" => {}      
-         }
-      @entrypoints['MLS'] = {
-        "LeagueID" => 17,
+        "LeagueID" => 16,
+        "LeagueName" => "NCF",
+        "FriendlyName" => "Football",
+        "espnSchema" => [],
+        "schema" => {}      
+    }
+                    
+    @entrypoints['MLS'] = {
         "url" => "http://www.espnfc.us/scores?date=" + @datestr,
         "BaseURL" => "http://www.espnfc.us/",
-        "FriendlyName" => "Soccer",
         "PlayerBaseURL" => "http://www.espnfc.us/",
-        "scorePeriods" => [
-
-        ],
+        "LeagueID" => 17,
+        "LeagueName" => "MLS",
+        "FriendlyName" => "Soccer",
+        "scorePeriods" => [],
         "espnSchema" => [
-          "POS",
-          "NO",
-          "Name",
-          "SH",
-          "SG",
-          "G",
-          "A",
-          "OF",
-          "FD",
-          "FC",
-          "SV",
-          "YC",
-          "RC"
+            "POS",
+            "NO",
+            "Name",
+            "SH",
+            "SG",
+            "G",
+            "A",
+            "OF",
+            "FD",
+            "FC",
+            "SV",
+            "YC",
+            "RC"
         ],
         "trans" => {
-          "G" => "Goals",
-          "A" => "Assists",
-          "FC" => "FoulsCommited",
-          "FD" => "FoulsSuffered",
-          "YC" => "YellowCards",
-          "SH" => "Shots",
-          "SV" => "Saves",
-          "RC" => "RedCards",
+            "G" => "Goals",
+            "A" => "Assists",
+            "FC" => "FoulsCommited",
+            "FD" => "FoulsSuffered",
+            "YC" => "YellowCards",
+            "SH" => "Shots",
+            "SV" => "Saves",
+            "RC" => "RedCards",
         },
-        "percents" => {
-
-        },
+        "percents" => {},
         "schema" => {}
-      }
+    }
 
-
-      @entrypoints['PGA'] = {
+    @entrypoints['PGA'] = {
         "url" => "http://espn.go.com/golf/leaderboard",
         "LeagueID" => 18,
-        "FriendlyName" => "Golf",
         "LeagueName" => "PGA",
-        "scorePeriods" => [
-          
-        ],
+        "FriendlyName" => "Golf",
+        "scorePeriods" => [],
         "espnSchema" => [
-          "POS",
-          "CNTRY",
-          "PLAYER",
-          "TO PAR",
-          "R1",
-          "R2",
-          "R3",
-          "R4",
-          "TOT",
-          "EARNINGS",
-          "FEDEX PTS"
+            "POS",
+            "CNTRY",
+            "PLAYER",
+            "TO PAR",
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "TOT",
+            "EARNINGS",
+            "FEDEX PTS"
         ],
         "schema" =>  {},
         "percents" => {},
         "trans" => {
-          "POS" => "Position",
-          "R1" => "Round1",
-          "R2" => "Round2",
-          "R3" => "Round3",   
-          "R4" => "Round4",
-          "TOT" => "Strokes",
-          "THRU" => "MissedCuts",
-          "TO PAR" => "ToPar"
-
+            "POS" => "Position",
+            "R1" => "Round1",
+            "R2" => "Round2",
+            "R3" => "Round3",   
+            "R4" => "Round4",
+            "TOT" => "Strokes",
+            "THRU" => "MissedCuts",
+            "TO PAR" => "ToPar"
         }
-      }
+    }
 
       @entrypoints['MLB'] = {
         "LeagueID" => 19,
@@ -829,11 +744,6 @@ class SportsScraper
           @league = trans[league]
       end
 
-      ## usually we need
-      ## to keep one match
-      ## url, and it needs the
-      ## game id
-
       if league == "PGA" then
         @match_url = "http://espn.go.com/golf/leaderboard?tournamentId="
       elsif league == "NASCAR" 
@@ -844,9 +754,6 @@ class SportsScraper
         @match_url = "http://espn.go.com/{league}/{endpoint}?gameId="
       end
 
-            
-
-      #if @entrypoints.has_key(@league)?
       @entrypoint = @entrypoints[@league]
 
 
@@ -857,7 +764,6 @@ class SportsScraper
       @leagueFriendlyName  = @entrypoint['FriendlyName']
       @scorePeriods = @entrypoint['scorePeriods']
 
-      #@entrypoints.each { |k, entrypoint|
       @inheritors.each {  |parent, children|
           keys = ['espnSchema', 'schema', 'percents', 'splitters', 'trans', 'scorePeriods'] 
           children.each { |c|
@@ -874,9 +780,6 @@ class SportsScraper
 
       @scorePeriods = @entrypoint['scorePeriods']
 
-      #}
-      ## main db connection
-      ## 
       rails_db_config = Rails.application.config.database_configuration[Rails.env]
       @host = rails_db_config['host']
       @username = rails_db_config['username']
@@ -949,17 +852,12 @@ class SportsScraper
     def get_team_id(team_url)
         res = @client.get(team_url)
         parser = res.parser
-        #puts team_url
         matches = parser.inner_html.match(/\?teamId=(\d+)/) 
 
         return matches[1]
     end
 
 
-    ## basketball 
-    ## stats
-    ##
-    ##
     def process_basketball_stats(mod_data)
 			 home_players_1 = mod_data.children[1].children
 			 home_players_2 = mod_data.children[3].children
@@ -1466,8 +1364,6 @@ class SportsScraper
           sname = name.downcase.gsub(/\s/, "-")
           link = link_base + id + "/"  + sname
 
-          ## no teams
-          ## for golf
           players_final[name]['teamId'] = nil
           players_final[name]['url'] = link
           players_final[name]['id'] = id
@@ -1497,23 +1393,7 @@ class SportsScraper
         "teams" => {}
       }
     end
-    ## process baseball
-    ## stats output
-    ## should look like
-    ##
-    ##
-    ##   
-    ## Players:
-    ## GameID,LeagueID,TeamID,PlayerID,AtBats,Runs,Hits,RBI,HomeRuns,Walks,Strikeouts,StolenBases,LeftOnBase,PitchingInnings,PitchingHits,PitchingRuns,PitchingEarnedRuns,PitchingWalks,PitchingStrikeouts,PitchingHomeRuns,CreatedDate,ModifiedDate
-    ##
-    ##
-    ## Teams:
-    ## 
-    ## GameID,LeagueID,TeamID,Inning_1,Inning_2,Inning_3,Inning_4,Inning_5,Inning_6,Inning_7,Inning_8,Inning_9,Inning_10,Inning_11,Inning_12,Inning_13,Inning_14,Runs,Hits,Errors,CreatedDate,ModifiedDate
-    ##  
 
-    ##
-    ##
     ## tables should look like
     ## 0 => home hitters
     ## 1 => away hitters
@@ -1595,26 +1475,14 @@ class SportsScraper
       ## now process the
       ## teams
       ##
-    
+
       return {
         "teams" => team_stats,
         "players" => players
       }  
     end
 
-    ## oputput of stats should
-    ##
-    ## resemble
-    ## for players
-    ##
-    ## GameID,LeagueID,TeamID,PlayerID,ShotsAgainst,GoalsAgainst,Saves,Goals,Assists,Points,PenaltyMinutes,ShotsOnGoal,Blocks,Hits,Takeaways,Giveaways,FaceoffsWon,FaceoffsLost,FaceoffPercent,CreatedDate,ModifiedDate
-    ##
-    ## for teams
-    ##
-    ## GameID,LeagueID,TeamID,Period_1,Period_2,Period_3,Overtime_1,Overtime_2,Shootout,FinalScore,TotalShots,Shots_1,Shots_2,Shots_3,PowerPlays,PPConverted,PPPercent,PenaltyMinutes,FaceoffsWon,FaceoffPercent,Hits,Blocks,CreatedDate,ModifiedDate
-    ##
-    ##
-    ##
+
     ## indice 4 and 5
     ## contain the needed
     ## data for players
@@ -1760,12 +1628,6 @@ class SportsScraper
           "players" => players,
           "teams" => teams
       }
-
-     
-      ## get both 
-      ## data for home
-      ## and away
-
     end
 
     ## output of stats should resemble this
@@ -2314,108 +2176,62 @@ class SportsScraper
 
      
        if game then
-        if game['inProgress'] == 0 then
-          print "This game ended and we stored its results.."
+          if game['inProgress'] == 0 then
+             print "This game ended and we stored its results.."
           return
-        end
+          end
        end
 
        url = self.form_url("boxscore", pureGameId)
        puts "Game URL: #{url}"
 
-       ## for testing
-       #resp = @client.get(url + gameId)
-
        resp = @client.get(url)
 
        parser = @parser = resp.parser
        gametitle = parser.xpath("//title").first.inner_html.match(/([^^]+)\-/)
-       ## match until
-       ##  we have a hyphen
-       ##
-       ## so 
-       ## Team A v  Team B - ESPN => Team A v Team B
+
        if gametitle then
-        gametitle = gametitle[1].gsub(/\s?\-.*/, "")
+          gametitle = gametitle[1].gsub(/\s?\-.*/, "")
        else
-        gametitle = parser.xpath("//title").first.inner_html
-
+          gametitle = parser.xpath("//title").first.inner_html
        end
-       
 
-
-       ## get the attendance
-       ##
-       ## best way is to match 
-       ## what is provided
-       ## as Attendance:\s\s\s\+(\d)
-        attendance = 0
-        if @league == "MLB" then
+       attendance = 0
+                     
+       if @league == "MLB" then
           matches = parser.inner_text.match(/Attendance([\d]+,?[\d]+)/)
-        else
+       else
           matches = parser.inner_html.match(/Attendance\:[A-Za-z<>\\\/\s]+([\d]+,?[\d]+)/)
-        end
+       end
 
         
                      
-        if matches then
-          attendance = matches[1].gsub(/,/, "")
-        end
+       if matches then
+            attendance = matches[1].gsub(/,/, "")
+       end
                      
-
-       ## get the start time of the game
-       ## this is available in game-time-location
-       ## we need the first children
-       ## this will only work on some leagues, through
-       ## this class others need there own
-       ##
-       ## dates look like
-       ## H:i, M D, Y
-       ##
        startDate = ''
        time_of_match =  parser.xpath("//div[@class='game-time-location']").first()
        months = {
-          "January" => 1,
-          "February" => 2,
-          "March" => 3,
-          "April" => 4,
-          "May" => 5,
-          "June" => 6,
-          "July" => 7,
-          "August" => 8,
-          "September" => 9,
-          "October" => 10,
-          "November" => 11,
-          "December" => 12
+            "January" => 1,
+            "February" => 2,
+            "March" => 3,
+            "April" => 4,
+            "May" => 5,
+            "June" => 6,
+            "July" => 7,
+            "August" => 8,
+            "September" => 9,
+            "October" => 10,
+            "November" => 11,
+            "December" => 12
        }
        if time_of_match then
-         gameTime = time_of_match.children[0].inner_html
-         #startDate = Date.parse(gameTime).strftime("%Y-%M-%d  %H:%i:%s")
-         puts "Game Time: #{gameTime}"
-         ## matches
-         ##
-         ## 2:00 PM, April 5, 2015
-         ##
-         # splitter = gameTime.match(/([\w\d]+):([\d]+).*(AM|PM).*,\s?+([\w]+)\s+?([\d]+),\s+?([\d]+)/)
-         # startDateHour = splitter[1].to_i
-         # startDateMinutes = splitter[2].to_i
-         # startDateAmOrPm = splitter[3]
-         # if startDateAmOrPm == "PM" then
-         #  startDateHour += 12
-         # end
+            gameTime = time_of_match.children[0].inner_html
+            puts "Game Time: #{gameTime}"
 
-         # startDateMonth = months[splitter[4]].to_i
-         # startDateDate = splitter[5].to_i
-         # startDateYear = splitter[6].to_i
-         ## we don't get seconds however
-         ## put to 0 as it can effect the inputted minutes
-
-         # startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, startDateHour, startDateMinutes, 0, '+7').strftime("%Y-%m-%d %H:%M:%S")
-         startDate = Time.zone.parse(gameTime).strftime("%Y-%m-%d %H:%M:%S")
+            startDate = Time.zone.parse(gameTime).strftime("%Y-%m-%d %H:%M:%S")
        else
-         ## match other leagues
-         ## here
-
          if @league == "PGA" then
           ## PGA gives us:
           ## Month start-end, year
@@ -2425,12 +2241,12 @@ class SportsScraper
           ## March 3-4, 2015
           split = parser.xpath("//*[@class='date']").first()
           if split then 
-            split = split.inner_html
-            splitter = split.match(/([A-Za-z]+)\s?([\d]{1,2})\-([\d]{1,2}),\s+?([\d]{4})/)
-            startDateYear = splitter[4].to_i
-            startDateMonth = months[splitter[1]].to_i
-            startDateDate = splitter[2].to_i 
-            startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, 0,0,0, '+7').strftime("%Y-%m-%d %H:%M:%S")
+             split = split.inner_html
+             splitter = split.match(/([A-Za-z]+)\s?([\d]{1,2})\-([\d]{1,2}),\s+?([\d]{4})/)
+             startDateYear = splitter[4].to_i
+             startDateMonth = months[splitter[1]].to_i
+             startDateDate = splitter[2].to_i
+             startDate = DateTime.new(startDateYear, startDateMonth, startDateDate, 0,0,0, '+7').strftime("%Y-%m-%d %H:%M:%S")
           end
 
          elsif @league == "NASCAR" then
@@ -2453,7 +2269,6 @@ class SportsScraper
           splitter = parser.inner_html.match(/var\s+?d\s+\=\s+new\s+Date\(([\d]+)\)/)
           
           unix_time = splitter[1].to_i / 1000
-          #puts unix_time
 
           startDate = Time.at(unix_time).strftime("%Y-%m-%d %H:%M:%S")
         
@@ -2462,32 +2277,23 @@ class SportsScraper
        end
     
 
-
-       ## the priminitive check
-       ## is whether this game is current, has been finished
-       ## or is in the future
-       ##
-       ## we do this by checking the 
-       ## if our tickets button exists
-       ## when it does the game has not started
-      
-
-       status = parser.xpath("//*[@class='game-state']")
+      status = parser.xpath("//*[@class='game-state']")
 
       not_started = false
       ended = false
+                     
       status.each { |st|
           if st.inner_html.include? "Final" then
-            inProgress = 0
-            ended = true
-            puts "Game Status: Final"
+             inProgress = 0
+             ended = true
+             puts "Game Status: Final"
           elsif st.inner_html.include? "ET" then
-            inProgress = -1
-            not_started = true
-            puts "Game Status: Not Started"
+             inProgress = -1
+             not_started = true
+             puts "Game Status: Not Started"
           else
-            inProgress = 1
-            puts "Game Status: In Progress"
+             inProgress = 1
+             puts "Game Status: In Progress"
           end
       }
 
@@ -2509,7 +2315,7 @@ class SportsScraper
           ## we need to get the final
           ## score foreach team now
           matches = parser.xpath("//td[contains(@class,'ts')]")
-          #puts matches
+
           home_final_score = matches[0].inner_html
           away_final_score = matches[1].inner_html
         end
@@ -2518,11 +2324,6 @@ class SportsScraper
       title =  parser.xpath("//title").first.inner_html
 
 
-      ## get the league
-      ## id if we dont already have it
-      ##
-      ## THIS will be deprecated..
-      ##
       unless @leagueId
 
         #if not  @leagueFriendlyName ==  "Golf"  then
@@ -2531,11 +2332,6 @@ class SportsScraper
         #  self.check_league(@leagueId)
         #end
       end
-
-      ## todo also needs a way to chekc whether
-      ## the game is over
-
-       #matchup = parser.xpath("//*[@id='matchup-" + @league.downcase +  "-" + gameId +"']")
 
       if not self.is_singular_league()
 
@@ -2547,53 +2343,39 @@ class SportsScraper
          homefull = matchup.xpath("//*[@class='team-color-strip']")
 
 
-          if away.children[1].children[0].children.length > 3 then
-            away_info = away.children[1].children[0].children[2]
-          else
-            away_info = away.children[1].children[0].children[0]
-          end
+         if away.children[1].children[0].children.length > 3 then
+             away_info = away.children[1].children[0].children[2]
+         else
+             away_info = away.children[1].children[0].children[0]
+         end
 
-          if home.children[1].children[0].children.length > 3 then
-            home_info = home.children[1].children[0].children[2]
-          else
-            home_info = home.children[1].children[0].children[0]
-          end
+         if home.children[1].children[0].children.length > 3 then
+             home_info = home.children[1].children[0].children[2]
+         else
+             home_info = home.children[1].children[0].children[0]
+         end
                      
          away_name = away_info.inner_html
          home_name = home_info.inner_html
          away_team_url = away_info.attr("href")
          home_team_url = home_info.attr("href")
 
-         ## now we can pass the team links
-         ## to get_team_info
-         ## which should successfully get the info
-         ## should our info be right
-
-         ## getting the acronyms
-         ## for the team should
-         ## follow this approach
-         ## /team/_/name/ACCRONYM/
-         ##
-         ## TODO check on new update
-         # away_regex_match = away_team_url.match(/\/([\w\-]+)\/?/)
          if not @league == "NCF" then
-         away_regex_match = away_team_url.match(/name\/(\w*)\//)
-         @away_acc = away_regex_match[1].upcase
-         # home_regex_match = home_team_url.match(/\/([\w\-]+)\/?/)
-         home_regex_match = home_team_url.match(/name\/(\w*)\//)
-         @home_acc = home_regex_match[1].upcase
+             home_regex_match = home_team_url.match(/name\/(\w*)\//)
+             away_regex_match = away_team_url.match(/name\/(\w*)\//)
+                     
+             @home_acc = home_regex_match[1].upcase
+             @away_acc = away_regex_match[1].upcase
          else
-            @away_acc = ""
-            @home_acc = ""
+             @away_acc = ""
+             @home_acc = ""
          end
+                     
          @home_team_id = "#{@leagueId}#{self.get_team_id(home_team_url)}"
          @away_team_id = "#{@leagueId}#{self.get_team_id(away_team_url)}"
 
          puts "Teams: #{away_name}(#{@away_acc}) vs. #{home_name}(#{@home_acc})"
          puts "----------------------------------------------------------------------------"
-         ## our two next siblings are
-         ## the quarter points for the first and second
-         ## team
 
          if not_started then
          game = {
@@ -2616,10 +2398,10 @@ class SportsScraper
              away_namefull = awayfull_info.inner_text
              home_namefull = homefull_info.inner_text
          elsif @league == 'NHL' || @league == 'NBA'
-             awayfull_info = awayfull.children[0].children[2]
-             homefull_info = homefull.children[1].children[2]
-             away_namefull = awayfull_info.inner_text
-             home_namefull = homefull_info.inner_text
+             awayfull_info = awayfull.children[0].children[1]
+             homefull_info = homefull.children[1].children[1]
+             away_namefull = awayfull_info
+             home_namefull = homefull_info
          else
              awayfull_info = away_name
              homefull_info = home_name
@@ -2726,27 +2508,17 @@ class SportsScraper
      end
 
   
-                     
-      ##  todo
-      ## needs revisioning
       if not self.is_singular_league()
         if @leagueFriendlyName == "Soccer" then
           mod_data = parser.xpath("//section[contains(@class, 'mod-container')]")
         else 
-    			 mod_data = parser.xpath("//table[contains(@class,'mod-data')]")
+          mod_data = parser.xpath("//table[contains(@class,'mod-data')]")
         end
-     else
-        mod_data = parser.xpath("//div[contains(@class,'mod-content')]")
-     end
-      ## hooks we now need
-      ## to look at how
-      ## we are going to process
-      ## the next data structs
-      ##
-      ## Basketball written  03/25/2015
-      ## Football written  03 /26/2015
-      ## Hockey written 03/27/2015
-      ## Baseball written 03/28/2015
+      else
+          mod_data = parser.xpath("//div[contains(@class,'mod-content')]")
+      end
+
+
       if @leagueFriendlyName == "Basketball" then 
           stats = process_basketball_stats(mod_data)
       end  
@@ -2958,7 +2730,7 @@ class SportsScraper
     end
 
 
-    def insert_game_player(gameId, player) 
+    def insert_game_player(gameId, player)
       data = self.get_league_player_schema(player)
 
       q = @dbsyntax.insert_str(@db, self.get_game_player_table(), data)
@@ -3085,7 +2857,6 @@ class SportsScraper
       pred['LeagueId'] = @leagueId
       pred['CreatedDate'] = createdDate
       pred['ModifiedDate'] = modifiedDate
-
       return pred
 	  end
 
@@ -3131,13 +2902,10 @@ class SportsScraper
      end
 
 
-     @teamSchema.each { |field|
-
-        ## check for existance
-        ## here
-
-        if data[field] then
-          pred[field] = data[field]
+     @teamSchema.each { |k,v|
+                     
+        if data[k] then
+          pred[k] = data[k]
         end
       }
 
@@ -3146,7 +2914,8 @@ class SportsScraper
 			## can be found
 			## in main objects and current game
       
-			date = time.strftime("%Y-%m-%d %H:%M:%S")
+      date = time.strftime("%Y-%m-%d %H:%M:%S")
+                     
       if not isUpdate then
         pred['CreatedDate'] = date 
       end
@@ -3175,7 +2944,7 @@ class SportsScraper
     ## of the League
     def insert_game_team(gameId, team)
       data = self.get_league_team_schema(team)
-
+puts data
       q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
       @db.query(q)
@@ -3192,13 +2961,7 @@ class SportsScraper
       @task_logger.increment(:records_updated)
     end
 
-    ## these need to insert
-    ## or update players
-    ## based on their
-    ##
-    ## 
-    ## player ids need to know
-    ## there team id
+
     def insert_or_update_player(gameId, player)
       if @league == "MLB" || @league == "NFL" || @league == "NCF" then
          @playerId = "#{player['id']}".gsub!(/\D/,"")
@@ -3214,10 +2977,9 @@ class SportsScraper
 
       if pReturn then
         if self.game_player_exists(gameId, @playerId)
-          self.update_game_player(gameId, player)
+             self.update_game_player(gameId, player)
         else
-
-          self.insert_game_player(gameId, player)
+             self.insert_game_player(gameId, player)
         end
       else  
 
@@ -3226,12 +2988,9 @@ class SportsScraper
           ## behavoir we need
           ## the program's
           ## player id
-        else 
-          ## a zero return means
-          ## we can add when
-          ##
-          self.insert_player(player) 
-          self.insert_game_player(gameId, player)
+        else
+             self.insert_player(player)
+             self.insert_game_player(gameId, player)
         end
       end
     end
@@ -3516,22 +3275,18 @@ class SportsScraper
       return false
     end
 
-    ## need to return Y-m-D H:i:S
     def make_time()
-      # Time.zone is UTC by default. Check the config/application.rb
-      ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
+        ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
     end
 
-
-    ##
     def update_match(opts)
-      str = @dbsyntax.update_str(@db, @league_table,opts)
-      @db.query(str)
+        str = @dbsyntax.update_str(@db, @league_table,opts)
+        @db.query(str)
     end
 
     def add_match
-      str = @dbsyntax.insert_str(@db, @league_table, opts)
-      @db.query(str)
+        str = @dbsyntax.insert_str(@db, @league_table, opts)
+        @db.query(str)
     end
 end
 
