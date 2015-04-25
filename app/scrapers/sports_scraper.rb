@@ -71,7 +71,7 @@ def insert_str(db, table, opts)
         str = str.gsub(/,$/, "")
 
     str += ")"
-
+    #puts str
     return str
 end
                     
@@ -2081,9 +2081,17 @@ end
              ended = true
              puts "Game Status: Final"
           elsif st.inner_html.include? "ET" then
-             inProgress = -1
+             inProgress = 2
              not_started = true
              puts "Game Status: Not Started"
+          elsif st.inner_html.include? "Delayed" then
+             inProgress = 2
+             not_started = true
+             puts "Game Status: Delayed"
+          elsif st.inner_html.include? "Postponed" then
+             inProgress = 2
+             not_started = true
+             puts "Game Status: Postponed"
           else
              inProgress = 1
              puts "Game Status: In Progress"
@@ -2202,13 +2210,12 @@ end
              home_namefull = homefull_info
          end
                      
-                     
+                    
          els = parser.xpath("//*[@class='linescore']")
 
          
          ## get the total scores
 
-         
      
          scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
          scores_full = Array.new 
@@ -2398,7 +2405,7 @@ def update_game(game)
     @db.query(updateStr)
     @task_logger.increment(:records_updated)
 
-    if not game['InProgress'] == -1 then
+    if not game['InProgress'] == 2 then
         if not self.is_singular_league() then
             self.insert_or_update_team(game['gameId'], game['teams']['home'])
             self.insert_or_update_team(game['gameId'], game['teams']['away'])
@@ -2592,7 +2599,7 @@ def get_league_player_schema(data, isUpdate=false)
             pred[k] = data[k]
         end
     }
-                    
+
     time = Time.new
     modifiedDate = time.strftime("%Y-%m-%d %H:%M:%S")
                     
@@ -2634,7 +2641,6 @@ end
       lang.each { |l|
 
         pred[l] = data['scores'][cnt]
-
         cnt += 1
      }
 
@@ -2683,14 +2689,14 @@ end
 
 			pred['TeamID'] = data['id']
 			pred['ModifiedDate'] = date
-    
+
       return pred
     end
 
 #-----------------------------------------------------------------------------------------------
 def insert_game_team(gameId, team)
     data = self.get_league_team_schema(team)
-    puts data
+
     q = @dbsyntax.insert_str(@db, self.get_game_team_table(), data)
 
     @db.query(q)
@@ -2787,7 +2793,7 @@ def insert_game(game)
     @db.query(insertStr)
     @task_logger.increment(:records_inserted)
 
-    if not game['InProgress'] == -1 then
+    if not game['InProgress'] == 2 then
         if not self.is_singular_league() then
             self.insert_or_update_team(game['gameId'], game['teams']['home'])
             self.insert_or_update_team(game['gameId'], game['teams']['away'])
