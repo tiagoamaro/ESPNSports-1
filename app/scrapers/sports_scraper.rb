@@ -543,16 +543,14 @@ def initialize(league, task_logger)
         "scorePeriods" => [],
         "espnSchema" => [
             "POS",
-            "CNTRY",
-            "PLAYER",
+            "name",
             "TO PAR",
             "R1",
             "R2",
             "R3",
             "R4",
             "TOT",
-            "EARNINGS",
-            "FEDEX PTS"
+            "THRU"
         ],
         "schema" =>  {},
         "percents" => {},
@@ -563,7 +561,7 @@ def initialize(league, task_logger)
             "R3" => "Round3",   
             "R4" => "Round4",
             "TOT" => "Strokes",
-            "THRU" => "MissedCuts",
+            "THRU" => "MissedCut",
             "TO PAR" => "ToPar"
         }
     }
@@ -1217,83 +1215,64 @@ def process_racing_stats(modData)
 end
 
 #-----------------------------------------------------------------------------------------------
-    def process_golf_stats(modData)
-        elem = ""
-        players = modData.xpath("//tr[contains(@id, 'player-')]")
+def process_golf_stats(modData)
+    link_base = "http://espn.go.com/golf/player/_/id/"
+                    
+    players = modData.xpath("//tr[contains(@id, 'player-')]")
+    status = modData.xpath("//*[@class='round']")
+    gamestatus = status[0].children[0].inner_text
+    players_final = {}
+                    
+    players.each { |player|
+        stats = player.xpath("td")
+        
+        pos     = stats[0].children[0].inner_text
+                    
+        if gamestatus == "Complete"
+            id      = stats[2].children[0].attr("name")
+            name    = stats[2].children[0].inner_text
+            to_par  = stats[3].children[0].inner_text
+            thru    = 0
+            r1      = stats[4].children[0].inner_text
+            r2      = stats[5].children[0].inner_text
+            r3      = stats[6].children[0].inner_text
+            r4      = stats[7].children[0].inner_text
+            strokes = stats[8].children[0].inner_text
+        else
+            id      = stats[3].children[0].attr("name")
+            name    = stats[3].children[0].inner_text
+            to_par  = stats[4].children[0].inner_text
+            thru    = stats[6].children[0].inner_text
+            r1      = stats[7].children[0].inner_text
+            r2      = stats[8].children[0].inner_text
+            r3      = stats[9].children[0].inner_text
+            r4      = stats[10].children[0].inner_text
+            strokes = stats[11].children[0].inner_text
+        end
 
-        players_final = {}
-        ## custom process
-        ## we need to look
-        ## at every attribute
-        ## 
-        ## third one will be the player's
-        ## name
-        ##
-        ##
-        ## base url for players is 
-        ## 
-        link_base = "http://espn.go.com/golf/player/_/id/"
-        players.each { |player|
-          stats = player.xpath("td")
+        players_final[name] = {}
 
-          ## for golf we may get
-          ## the needed player info
-          ## in different indicies as 
-          ## a result
-          cnts = [0,1,2,3] 
-          name=''
-          id=''
-          cnts.each { |cnt|
-            if stats[cnt] then 
-              if stats[cnt].children then
-                if stats[cnt].children[0].node_name == "a" then
-                    id = stats[cnt].children[0].attr("name") 
-                    name = stats[cnt].children[0].inner_html
-                 end
-              end
-            end
-          } 
+        sname = name.downcase.gsub(/\s/, "-")
+        link = link_base + id + "/"  + sname
 
-  
-            
-          players_final[name] = {}
-          ## to get
-          ## the url
-          ## we also need to 
-          ## downcase
-          ## the name andhyphenate the spaces
-          sname = name.downcase.gsub(/\s/, "-")
-          link = link_base + id + "/"  + sname
+        players_final[name]['teamId'] = 181
+        players_final[name]['url']    = link
+        players_final[name]['id']     = id
+        players_final[name]['name']   = name
+        players_final[name]['TO PAR'] = to_par
+        players_final[name]['THRU']   = thru
+        players_final[name]['R1']     = r1
+        players_final[name]['R2']     = r2
+        players_final[name]['R3']     = r3
+        players_final[name]['R4']     = r4
+        players_final[name]['TOT']    = strokes
+    }     
 
-          players_final[name]['teamId'] = nil
-          players_final[name]['url'] = link
-          players_final[name]['id'] = id
-
-          cnt = 0
-          stats.each { |stat|
-            cur = @espnSchemas[cnt]          
-
-            ## we may need to look
-            ## in the inner children of the
-            ## element so 
-
-            if stat.children[0].class.to_s == "Nokogiri::XML::Element"
-              stat = stat.children[0].inner_html.to_s
-            else
-              stat = stat.inner_html.to_s
-            end
-            if not cur == "PLAYER" then
-              players_final[name][cur] = stat
-            end
-            cnt += 1
-          }
-        }     
-
-      return {
+    return {
         "players" => players_final,
         "teams" => {}
-      }
-    end
+    }
+end
 
 #-----------------------------------------------------------------------------------------------
 def process_baseball_stats(modData, parser)
@@ -2005,6 +1984,7 @@ end
 
        if gametitle then
           gametitle = gametitle[1].gsub(/\s?\-.*/, "")
+          gametitle = gametitle.gsub(" Golf Leaderboard and Results ", "")
        else
           gametitle = parser.xpath("//title").first.inner_html
        end
