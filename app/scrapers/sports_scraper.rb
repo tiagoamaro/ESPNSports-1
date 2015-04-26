@@ -174,6 +174,20 @@ def initialize(league, task_logger)
             "Plus Minus",
             "PTS"
         ],
+        "espnTeamSchema" => [
+            ["FGM-A", "Splitter"], # This is mapped on @entrypoint's splitters
+            ["3PM-A", "Splitter"], # This is mapped on @entrypoint's splitters
+            ["FTM-A", "Splitter"], # This is mapped on @entrypoint's splitters
+            ["OREB", "OffRebounds"],
+            ["DREB", "DefRebounds"],
+            ["REB", "Rebounds"],
+            ["AST", "Assists"],
+            ["STL", "Steals"],
+            ["BLK", "Blocks"],
+            ["TO", "Turnovers"],
+            ["PF", "PersonalFouls"],
+            ["PTS", "FinalScore"],
+        ],
         "splitters" => {
             "FGM-A" => [
                 "FGMade",
@@ -853,6 +867,7 @@ def process_basketball_stats(mod_data)
                     
     parser = @parser
     hash = @espnSchemas
+    team_espn_schema = @entrypoint['espnTeamSchema']
     splitters = @splitters
     percents = @percentages
     trans = @trans
@@ -998,41 +1013,59 @@ def process_basketball_stats(mod_data)
       team_stats = {
       }
 
+      # Team stats are shown on ESPN data as represented on the
+      # espnTeamSchema order. Example: The first column is FGM-A, second 3PM-A, etc, and the last column is PTS
       teams = parser.xpath("//*[@class='even']")
       home_stats = teams.first.children
       away_stats = teams.last.children
       cnt = 0
-       team_stats[@home_acc] = {}
-        team_stats[@away_acc] = {}
-      home_stats.each { |stat|
-          if cnt > 1  and cnt < hash.length then
-       
-          ## we need the first 
-          ## child which is the strong
-          ## element
-            if stat.children.length > 0 then
-             team_stats[@home_acc][hash[cnt]] =  stat.children[0].inner_html
-            end
+      team_stats[@home_acc] = {}
+      team_stats[@away_acc] = {}
+
+      home_stats.each do |stat|
+        html_data = stat.children.inner_html
+        if !html_data.empty?
+          espn_schema = team_espn_schema[cnt]
+          data_acronym = espn_schema[0]
+          database_column = espn_schema[1]
+
+          if database_column == 'Splitter'
+            # Splitting information
+            made_column, taken_column = splitters[data_acronym]
+            made_data, taken_data = html_data.split('-')
+            team_stats[@home_acc][made_column]  = made_data
+            team_stats[@home_acc][taken_column] = taken_data
+          else
+            team_stats[@home_acc][database_column] = html_data
           end
-          ##
-          ## we dont need
-          ##information
-          if cnt == 1 then
-          end
+
           cnt += 1
-      } 
+        end
+      end
 
       cnt = 0
-      away_stats.each { |stat|
-          if cnt > 1 and cnt < hash.length then
-              ##puts stat.inner_html
-            if stat.children.length > 0 then
-              team_stats[@away_acc][hash[cnt]] = stat.children[0].inner_html
-            end
+
+      away_stats.each do |stat|
+        html_data = stat.children.inner_html
+        if !html_data.empty?
+          espn_schema = team_espn_schema[cnt]
+          data_acronym = espn_schema[0]
+          database_column = espn_schema[1]
+
+          if database_column == 'Splitter'
+            # Splitting information
+            made_column, taken_column = splitters[data_acronym]
+            made_data, taken_data = html_data.split('-')
+            team_stats[@away_acc][made_column]  = made_data
+            team_stats[@away_acc][taken_column] = taken_data
+          else
+            team_stats[@away_acc][database_column] = html_data
           end
+
           cnt += 1
-      }
- 
+        end
+      end
+
       return {
         "players"=> players,
         "teams"=> team_stats
