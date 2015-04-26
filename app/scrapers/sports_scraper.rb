@@ -768,7 +768,7 @@ def initialize(league, task_logger)
     @scorePeriods = @entrypoint['scorePeriods']
 
     @inheritors.each {  |parent, children|
-        keys = ['espnSchema', 'schema', 'percents', 'splitters', 'trans', 'scorePeriods']
+        keys = ['espnSchema', 'schema', 'percents', 'splitters', 'trans', 'scorePeriods', 'espnTeamSchema']
         children.each { |c|
           if c ==  @league then
             keys.each {  |k|
@@ -2644,7 +2644,7 @@ def get_league_player_schema(data, isUpdate=false)
         createdDate =  time.strftime("%Y-%m-%d %H:%M:%S")
         pred['CreatedDate'] =  createdDate
 
-        if @league == "MLB" || @league == "NFL" || @league == "NCF" then
+        if @league == "MLB" || @league == "NFL" || @league == "NCF" || @league == "NHL" then
             pred['PlayerID'] =  "#{data['id']}".gsub!(/\D/,"")
         else
             pred['PlayerID'] =  data['id']
@@ -2756,7 +2756,7 @@ end
 
 #-----------------------------------------------------------------------------------------------
 def insert_or_update_player(gameId, player)
-    if @league == "MLB" || @league == "NFL" || @league == "NCF" then
+    if @league == "MLB" || @league == "NFL" || @league == "NCF" || @league == "NHL" then
         @playerId = "#{player['id']}".gsub!(/\D/,"")
     else
         @playerId = player['id']
