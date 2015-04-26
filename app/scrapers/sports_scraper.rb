@@ -2250,7 +2250,7 @@ end
          ## get the total scores
 
      
-         scores = els.children[2].xpath("//*[contains(@style, 'text-align:center')]")
+         scores = els.children[2].xpath("//*[@style = 'text-align:center']")
          scores_full = Array.new 
          start = false 
          scores.each do |score|
@@ -2278,6 +2278,10 @@ end
          home_scores = scores_full.slice(0, team_scores)
          away_scores = scores_full.slice(team_scores, scores_full.length)
 
+         if not @league == "MLB"
+            home_scores.pop
+            away_scores.pop
+         end
          #puts "Home Scores are: "
          #puts home_scores
          #puts "Away scores are: "
