@@ -2249,13 +2249,22 @@ end
 
          ## get the total scores
 
-     
+
          scores = els.children[2].xpath("//*[@style = 'text-align:center']")
-         scores_full = Array.new 
-         start = false 
+         scores_full = Array.new
+         start = false
+
+         max_inning = "9"
+
+         if @league == "MLB"
+            innings = els.children[2].xpath("//*[@style = 'text-align:center' and @class = 'period']")
+            last_inning = innings.pop
+            max_inning = String.new(last_inning)
+         end
+
          scores.each do |score|
             score = String.new(score.inner_html.gsub(/\s+/, ""))
-            if score ==  "T" or score == "9"
+            if score ==  "T" or score == max_inning
               start = true
               next
             end
@@ -2264,9 +2273,9 @@ end
               break
             end
 
-            if start 
+            if start
               if is_number(score) then
-               scores_full.push(score) 
+               scores_full.push(score)
               end
               if score == "-" then
                scores_full.push(0)
