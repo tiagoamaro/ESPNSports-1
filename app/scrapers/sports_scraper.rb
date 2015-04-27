@@ -2558,7 +2558,12 @@ end
 #-----------------------------------------------------------------------------------------------
 def update_game_player(gameId, player)
     data = self.get_league_player_schema(player, true)
-    q = @dbsyntax.update_str(@db, self.get_game_player_table(), "GameID", gameId, data)
+
+    conditions = {
+        'GameID' => gameId,
+        'PlayerID' => player['id']
+    }
+    q = @dbsyntax.update_str_with_conditionals(@db, self.get_game_player_table(), conditions, data)
 
     @task_logger.increment(:records_updated)
     return @db.query(q)
