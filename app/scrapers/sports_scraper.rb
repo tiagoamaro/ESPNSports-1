@@ -14,7 +14,6 @@ class DBSyntax
 def get_schema(db, table)
 
     sql = "EXPLAIN " + table
-    schema = {}
     rows = db.query(sql)
     rows_ = Array.new
 
@@ -41,7 +40,6 @@ def insert_str(db, table, opts)
 
     str = String.new("")
     str += "INSERT INTO `" +  table + "` ("
-        schema = self.get_schema(db, table)
 
         opts.each { |k,v|
           if not v then
@@ -79,7 +77,6 @@ end
 def update_str(db, table, key, value, opts)
     self.foreign_key_checks_off(db)
 
-    schema = self.get_schema(db, table)
     str = String.new("")
 
     str += "UPDATE `" + table + "` SET "
@@ -102,7 +99,6 @@ end
 def update_str_with_conditionals(db, table, conditions = {}, data)
     self.foreign_key_checks_off(db)
 
-    schema = self.get_schema(db, table)
     str = String.new("")
 
     str += "UPDATE `" + table + "` SET "
@@ -1008,8 +1004,6 @@ def process_basketball_stats(mod_data)
       ##
       ## first one is home
       ## second one is away
-      home_acc = @home_acc
-      away_acc = @away_acc
       team_stats = {
       }
 
@@ -1289,6 +1283,7 @@ def process_golf_stats(modData)
         link = link_base + id + "/"  + sname
 
         players_final[name]['teamId'] = 181
+        players_final[name]['POS']    = pos
         players_final[name]['url']    = link
         players_final[name]['id']     = id
         players_final[name]['name']   = name
@@ -1324,7 +1319,6 @@ def process_baseball_stats(modData, parser)
     batters_trans   = @trans['Batters']
 
     players = {}
-    teams = {}
 
     @csplitters = @splitters['Pitchers']
     home_pitchers_ = self.process_struct_of_data(pitchers_schema, home_pitchers, pitchers_trans, "player")
@@ -1399,12 +1393,12 @@ def process_baseball_stats(modData, parser)
     away_stats['Errors'] = away_rhe[2]
 
     # Format stats to return
-    team_stats = {}
-    team_stats[@home_acc] = home_stats
-    team_stats[@away_acc] = away_stats
+    teams = {}
+    teams[@home_acc] = home_stats
+    teams[@away_acc] = away_stats
 
     return {
-        "teams" => team_stats,
+        "teams" => teams,
         "players" => players
     }
 end
@@ -1463,7 +1457,7 @@ end
       goalies_home_.each { |goalie|
           players = self.generate_player(players,goalie, @home_team_id)
       }
-      goalies_away_ = self.process_struct_of_data(goalies_schema, goalies_home, trans_goalies, "player")
+      goalies_away_ = self.process_struct_of_data(goalies_schema, goalies_away, trans_goalies, "player")
       goalies_away_.each { |goalie|
           players = self.generate_player(players,goalie, @away_team_id)
       }
@@ -1551,7 +1545,6 @@ end
 #-----------------------------------------------------------------------------------------------
 def process_football_stats(modData)
       teams = {}
-      lookups = ['Passing', 'Rushing', 'Receiving', 'Defense', 'Interceptions', 'Punting', 'Kicking', 'Punt Returns', 'Kick Returns']
 
       full_team_stats = modData[1].children[1]
       if @league == "NFL" then
@@ -1733,7 +1726,7 @@ def process_football_stats(modData)
         "players" => players,
         "teams" => teams
       }
-    end
+end
 
 #-----------------------------------------------------------------------------------------------
 def process_player_info(data)
@@ -1755,7 +1748,7 @@ def process_player_info(data)
       }
       #puts info
       return info
-    end
+end
 
     ## process the players info
     ## according to the anchor found
@@ -1788,7 +1781,6 @@ def process_struct_of_data(struct, mod, trans, for_)
       ## then pplayersj
       if for_ == "player"
         data = []
-        name = ''
 
         ## we may also have to treat
         ## singular contexes
@@ -1822,7 +1814,7 @@ def process_struct_of_data(struct, mod, trans, for_)
 
                 curdata = self.process_percentages(curdata)
                 data.push(curdata)
-             end
+              end
             }
          else
             player = mod
@@ -1931,11 +1923,11 @@ def process_data_further(cnt, stat, struct, trans, curdata)
             curdata[second] = matches[2]
         end
 
-        else
-            if trans[struct[cnt]] then
-                curdata[trans[struct[cnt]]] = stat.inner_html
-            end
+    else
+        if trans[struct[cnt]] then
+            curdata[trans[struct[cnt]]] = stat.inner_html
         end
+    end
 
     return curdata
 end
@@ -2155,8 +2147,6 @@ end
         end
       end
 
-      title =  parser.xpath("//title").first.inner_html
-
 
       unless @leagueId
 
@@ -2312,8 +2302,8 @@ end
           #puts scores
           home_scores = []
           away_scores = []
-          home_score = scores[1]
-          away_score = scores[2]
+          home_scores = scores[1]
+          away_scores = scores[2]
 
           ## get the home
           ## acc as well as away
@@ -3079,5 +3069,4 @@ def add_match
 end
 
 #-----------------------------------------------------------------------------------------------
-    end
-
+end
