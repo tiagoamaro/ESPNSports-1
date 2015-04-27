@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150427191939) do
+ActiveRecord::Schema.define(version: 20150427200823) do
 
   create_table "Games", primary_key: "GameID", force: :cascade do |t|
     t.integer  "LeagueID",     limit: 4,               null: false
@@ -70,14 +70,15 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.integer  "LeagueID",       limit: 4,                                        null: false
     t.integer  "TeamID",         limit: 4,                                        null: false
     t.integer  "PlayerID",       limit: 4,                                        null: false
-    t.integer  "FGTaken",        limit: 1,                          default: 0
+    t.integer  "Points",         limit: 1,                          default: 0
     t.integer  "FGMade",         limit: 1,                          default: 0
+    t.integer  "FGTaken",        limit: 1,                          default: 0
     t.decimal  "FGPercent",                precision: 12, scale: 2, default: 0.0
-    t.integer  "ThreePtTaken",   limit: 1,                          default: 0
     t.integer  "ThreePtMade",    limit: 1,                          default: 0
+    t.integer  "ThreePtTaken",   limit: 1,                          default: 0
     t.decimal  "ThreePtPercent",           precision: 12, scale: 2, default: 0.0
-    t.integer  "FTTaken",        limit: 1,                          default: 0
     t.integer  "FTMade",         limit: 1,                          default: 0
+    t.integer  "FTTaken",        limit: 1,                          default: 0
     t.decimal  "FTPercent",                precision: 12, scale: 2, default: 0.0
     t.integer  "OffRebounds",    limit: 1,                          default: 0
     t.integer  "DefRebounds",    limit: 1,                          default: 0
@@ -87,10 +88,9 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.integer  "Blocks",         limit: 1,                          default: 0
     t.integer  "BlocksAgainst",  limit: 1,                          default: 0
     t.integer  "PersonalFouls",  limit: 1,                          default: 0
+    t.integer  "Minutes",        limit: 1,                          default: 0
     t.datetime "CreatedDate"
     t.datetime "ModifiedDate"
-    t.integer  "Points",         limit: 1
-    t.integer  "Minutes",        limit: 1
   end
 
   add_index "PlayerStats_Basketball", ["GameID", "TeamID", "PlayerID"], name: "index_PlayerStats_Basketball_on_GameID_and_TeamID_and_PlayerID", unique: true, using: :btree
@@ -167,12 +167,12 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.integer  "ToPar",          limit: 1,                          default: 0
     t.integer  "Strokes",        limit: 4,                          default: 0
     t.binary   "MissedCut",      limit: 1,                          default: "b'0'"
-    t.datetime "CreatedDate"
-    t.datetime "ModifiedDate"
     t.decimal  "FairwayPercent",           precision: 12, scale: 2, default: 0.0
     t.decimal  "GreensPercent",            precision: 12, scale: 2, default: 0.0
     t.decimal  "AverageDrive",             precision: 12, scale: 2, default: 0.0
     t.integer  "LongestDrive",   limit: 4,                          default: 0
+    t.datetime "CreatedDate"
+    t.datetime "ModifiedDate"
   end
 
   add_index "PlayerStats_Golf", ["GameID", "PlayerID"], name: "index_PlayerStats_Golf_on_GameID_and_PlayerID", unique: true, using: :btree
@@ -251,43 +251,49 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.integer  "TeamID",       limit: 4
     t.integer  "LeagueID",     limit: 4
     t.string   "PlayerName",   limit: 100
+    t.string   "Position",     limit: 50
     t.string   "ESPNURL",      limit: 150
+    t.string   "ImageURL",     limit: 150
     t.datetime "CreatedDate",              null: false
     t.datetime "ModifiedDate",             null: false
-    t.string   "ImageURL",     limit: 150
-    t.string   "Position",     limit: 50
   end
 
   add_index "Players", ["TeamID"], name: "TeamID", using: :btree
 
   create_table "TeamStats_Baseball", id: false, force: :cascade do |t|
-    t.integer  "GameID",       limit: 4,             null: false
-    t.integer  "LeagueID",     limit: 4,             null: false
-    t.integer  "TeamID",       limit: 4,             null: false
-    t.integer  "Inning_1",     limit: 1, default: 0
-    t.integer  "Inning_2",     limit: 1, default: 0
-    t.integer  "Inning_3",     limit: 1, default: 0
-    t.integer  "Inning_4",     limit: 1, default: 0
-    t.integer  "Inning_5",     limit: 1, default: 0
-    t.integer  "Inning_6",     limit: 1, default: 0
-    t.integer  "Inning_7",     limit: 1, default: 0
-    t.integer  "Inning_8",     limit: 1, default: 0
-    t.integer  "Inning_9",     limit: 1, default: 0
-    t.integer  "Inning_10",    limit: 1, default: 0
-    t.integer  "Inning_11",    limit: 1, default: 0
-    t.integer  "Inning_12",    limit: 1, default: 0
-    t.integer  "Inning_13",    limit: 1, default: 0
-    t.integer  "Inning_14",    limit: 1, default: 0
-    t.integer  "Runs",         limit: 1, default: 0
-    t.integer  "Hits",         limit: 1, default: 0
-    t.integer  "Errors",       limit: 1, default: 0
+    t.integer  "GameID",             limit: 4,                                        null: false
+    t.integer  "LeagueID",           limit: 4,                                        null: false
+    t.integer  "TeamID",             limit: 4,                                        null: false
+    t.integer  "Inning_1",           limit: 1,                          default: 0
+    t.integer  "Inning_2",           limit: 1,                          default: 0
+    t.integer  "Inning_3",           limit: 1,                          default: 0
+    t.integer  "Inning_4",           limit: 1,                          default: 0
+    t.integer  "Inning_5",           limit: 1,                          default: 0
+    t.integer  "Inning_6",           limit: 1,                          default: 0
+    t.integer  "Inning_7",           limit: 1,                          default: 0
+    t.integer  "Inning_8",           limit: 1,                          default: 0
+    t.integer  "Inning_9",           limit: 1,                          default: 0
+    t.integer  "Inning_10",          limit: 1,                          default: 0
+    t.integer  "Inning_11",          limit: 1,                          default: 0
+    t.integer  "Inning_12",          limit: 1,                          default: 0
+    t.integer  "Inning_13",          limit: 1,                          default: 0
+    t.integer  "Inning_14",          limit: 1,                          default: 0
+    t.integer  "Runs",               limit: 1,                          default: 0
+    t.integer  "Hits",               limit: 1,                          default: 0
+    t.integer  "Errors",             limit: 1,                          default: 0
+    t.integer  "AtBats",             limit: 1,                          default: 0
+    t.integer  "RBI",                limit: 1,                          default: 0
+    t.integer  "Walks",              limit: 1,                          default: 0
+    t.integer  "Strikeouts",         limit: 1,                          default: 0
     t.datetime "CreatedDate"
     t.datetime "ModifiedDate"
-    t.integer  "AtBats",       limit: 1, default: 0
-    t.integer  "RBI",          limit: 1, default: 0
-    t.integer  "Walks",        limit: 1, default: 0
-    t.integer  "Strikeouts",   limit: 1, default: 0
-    t.integer  "Pitches",      limit: 4, default: 0
+    t.decimal  "PitchingInnings",              precision: 12, scale: 2, default: 0.0
+    t.integer  "PitchingHits",       limit: 1,                          default: 0
+    t.integer  "PitchingRuns",       limit: 1,                          default: 0
+    t.integer  "PitchingEarnedRuns", limit: 1,                          default: 0
+    t.integer  "PitchingWalks",      limit: 1,                          default: 0
+    t.integer  "PitchingStrikeouts", limit: 1,                          default: 0
+    t.integer  "PitchingHomeRuns",   limit: 1,                          default: 0
   end
 
   add_index "TeamStats_Baseball", ["GameID", "TeamID"], name: "index_TeamStats_Baseball_on_GameID_and_TeamID", unique: true, using: :btree
@@ -309,14 +315,14 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.integer  "Half_1",         limit: 1, default: 0
     t.integer  "Half_2",         limit: 1, default: 0
     t.integer  "FinalScore",     limit: 4, default: 0
-    t.integer  "FGTaken",        limit: 1, default: 0
     t.integer  "FGMade",         limit: 1, default: 0
+    t.integer  "FGTaken",        limit: 1, default: 0
     t.integer  "FGPercent",      limit: 1, default: 0
-    t.integer  "ThreePtTaken",   limit: 1, default: 0
     t.integer  "ThreePtMade",    limit: 1, default: 0
+    t.integer  "ThreePtTaken",   limit: 1, default: 0
     t.integer  "ThreePtPercent", limit: 1, default: 0
-    t.integer  "FTTaken",        limit: 1, default: 0
     t.integer  "FTMade",         limit: 1, default: 0
+    t.integer  "FTTaken",        limit: 1, default: 0
     t.integer  "FTPercent",      limit: 1, default: 0
     t.integer  "OffRebounds",    limit: 1, default: 0
     t.integer  "DefRebounds",    limit: 1, default: 0
@@ -428,9 +434,9 @@ ActiveRecord::Schema.define(version: 20150427191939) do
     t.string   "TeamFullName", limit: 255
     t.string   "TeamName",     limit: 50
     t.string   "ESPNUrl",      limit: 150
+    t.string   "ImageURL",     limit: 150
     t.datetime "CreatedDate",              null: false
     t.datetime "ModifiedDate",             null: false
-    t.string   "ImageURL",     limit: 150
   end
 
   add_index "Teams", ["LeagueID"], name: "LeagueID", using: :btree
