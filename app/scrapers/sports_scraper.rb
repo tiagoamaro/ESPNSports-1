@@ -145,7 +145,7 @@ def initialize(league, task_logger)
     }
 
     @entrypoints['NBA'] = {
-        "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
+        "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=20150427",
         "LeagueID" => 10,
         "LeagueName" => "NBA",
         "FriendlyName" => "Basketball",
@@ -182,7 +182,7 @@ def initialize(league, task_logger)
             ["BLK", "Blocks"],
             ["TO", "Turnovers"],
             ["PF", "PersonalFouls"],
-            ["PTS", "FinalScore"],
+            ["PTS", "FinalScore"]
         ],
         "splitters" => {
             "FGM-A" => [
@@ -207,14 +207,17 @@ def initialize(league, task_logger)
             "DREB" => "DefRebounds",
             "REB" => "Rebounds",
             "AST" => "Assists",
+            "STL" => "Steals",
             "BLK" => "Blocks",
             "TO" => "Turnovers",
-            "PF" => "PersonalFouls"
+            "PF" => "PersonalFouls",
+            "PTS" => "Points",
+            "Min" => "Minutes"
         },
         "percents" => {
             "FTPercent" => {
-            "lower" => "FTMade",
-            "upper" => "FTTaken"
+                "lower" => "FTMade",
+                "upper" => "FTTaken"
             },
             "FGPercent" => {
                 "lower" => "FGMade",
@@ -622,6 +625,12 @@ def initialize(league, task_logger)
               "ERA"
             ]
          },
+        "espnTeamSchema" => [
+            ["AB", "AtBats"],
+            ["RBI", "RBI"],
+            ["BB", "Walks"],
+            ["SO", "Strikeouts"]
+        ],
          "trans" => {
            "Pitchers" => {
                 "IP" => "PitchingInnings",
@@ -852,11 +861,10 @@ end
 
 #-----------------------------------------------------------------------------------------------
 def process_basketball_stats(mod_data)
-    home_players_1 = mod_data.children[1].children
-    home_players_2 = mod_data.children[3].children
-    away_players_1 = mod_data.children[5].children
-    away_players_2 = mod_data.children[7].children
-    away_players_3 = mod_data.children[9].children
+    home_players_1 = mod_data.children[7].children
+    home_players_2 = mod_data.children[9].children
+    away_players_1 = mod_data.children[1].children
+    away_players_2 = mod_data.children[3].children
 
     home_players = []
     away_players = []
@@ -875,10 +883,12 @@ def process_basketball_stats(mod_data)
         })
     }
     home_players_2.each { |player|
-        home_players.push({
-            "element" => player,
-            "teamId" => @home_team_id
-        })
+        if not home_players_2.xpath("//*[@colspan='14']")
+            home_players.push({
+                "element" => player,
+                "teamId" => @home_team_id
+            })
+        end
     }
     away_players_1.each { |player|
         away_players.push({
@@ -887,16 +897,12 @@ def process_basketball_stats(mod_data)
         })
     }
     away_players_2.each { |player|
-        away_players.push({
-            "element" => player,
-            "teamId" => @away_team_id
-        })
-    }
-    away_players_3.each { |player|
-        away_players.push({
-            "element" =>player,
-            "teamId" => @away_team_id
-        })
+        if not home_players_2.xpath("//*[@colspan='14']")
+            away_players.push({
+                "element" => player,
+                "teamId" => @away_team_id
+            })
+        end
     }
 
     final_players = home_players + away_players
@@ -1010,8 +1016,9 @@ def process_basketball_stats(mod_data)
       # Team stats are shown on ESPN data as represented on the
       # espnTeamSchema order. Example: The first column is FGM-A, second 3PM-A, etc, and the last column is PTS
       teams = parser.xpath("//*[@class='even']")
-      home_stats = teams.first.children
-      away_stats = teams.last.children
+      home_stats = teams.last.children
+      away_stats = teams.first.children
+
       cnt = 0
       team_stats[@home_acc] = {}
       team_stats[@away_acc] = {}
@@ -1059,6 +1066,41 @@ def process_basketball_stats(mod_data)
           cnt += 1
         end
       end
+
+      percents.each { |k, percent|
+
+            if team_stats[@away_acc] then
+              if team_stats[@away_acc][percent['lower']] and team_stats[@away_acc][percent['upper']] then
+                lower = team_stats[@away_acc][percent['lower']].to_f
+                upper = team_stats[@away_acc][percent['upper']].to_f
+
+
+                if lower > 0
+                  percentage = (lower / upper) * 100
+                else
+                  percentage = 0
+                end
+
+                team_stats[@away_acc][k] = String.new(percentage.to_s) + "%"
+              end
+            end
+
+            if team_stats[@home_acc] then
+              if team_stats[@home_acc][percent['lower']] and team_stats[@home_acc][percent['upper']] then
+                lower = team_stats[@home_acc][percent['lower']].to_f
+                upper = team_stats[@home_acc][percent['upper']].to_f
+
+
+                if lower > 0
+                  percentage = (lower / upper) * 100
+                else
+                  percentage = 0
+                end
+
+                team_stats[@home_acc][k] = String.new(percentage.to_s) + "%"
+              end
+            end
+        }
 
       return {
         "players"=> players,
@@ -1308,10 +1350,17 @@ def process_baseball_stats(modData, parser)
     home_team_batting  = modData[0].children[2]
     away_batters       = modData[2].children[1]
     away_team_batting  = modData[2].children[2]
-    home_pitchers      = modData[1].children[2]
-    home_team_pitching = modData[1].children[3]
-    away_pitchers      = modData[3].children[2]
-    away_team_pitching = modData[3].children[3]
+    if @inProgress == 1
+        home_pitchers      = modData[1].children[1]
+        home_team_pitching = modData[1].children[2]
+        away_pitchers      = modData[3].children[1]
+        away_team_pitching = modData[3].children[2]
+    else
+        home_pitchers      = modData[1].children[2]
+        home_team_pitching = modData[1].children[3]
+        away_pitchers      = modData[3].children[2]
+        away_team_pitching = modData[3].children[3]
+    end
 
     pitchers_schema = @espnSchemas['Pitchers']
     batters_schema  = @espnSchemas['Batters']
@@ -2103,22 +2152,27 @@ end
       status.each { |st|
           if st.inner_html.include? "Final" then
              inProgress = 0
+             @inProgress = 0
              ended = true
              puts "Game Status: Final"
           elsif st.inner_html.include? "ET" then
              inProgress = 2
+             @inProgress = 2
              not_started = true
              puts "Game Status: Not Started"
           elsif st.inner_html.include? "Delayed" then
              inProgress = 2
+             @inProgress = 2
              not_started = true
              puts "Game Status: Delayed"
           elsif st.inner_html.include? "Postponed" then
              inProgress = 2
+             @inProgress = 2
              not_started = true
              puts "Game Status: Postponed"
           else
              inProgress = 1
+             @inProgress = 1
              puts "Game Status: In Progress"
           end
       }
@@ -2142,8 +2196,8 @@ end
           ## score foreach team now
           matches = parser.xpath("//td[contains(@class,'ts')]")
 
-          home_final_score = matches[0].inner_html
-          away_final_score = matches[1].inner_html
+          home_final_score = matches[1].inner_html
+          away_final_score = matches[0].inner_html
         end
       end
 
@@ -2274,8 +2328,8 @@ end
          end
 
          team_scores = scores_full.length / 2
-         home_scores = scores_full.slice(0, team_scores)
-         away_scores = scores_full.slice(team_scores, scores_full.length)
+         away_scores = scores_full.slice(0, team_scores)
+         home_scores = scores_full.slice(team_scores, scores_full.length)
 
          if not @league == "MLB"
             home_scores.pop
@@ -2561,11 +2615,12 @@ def update_game_player(gameId, player)
 
     conditions = {
         'GameID' => gameId,
-        'PlayerID' => player['id']
+        'PlayerID' => @playerId
     }
     q = @dbsyntax.update_str_with_conditionals(@db, self.get_game_player_table(), conditions, data)
 
     @task_logger.increment(:records_updated)
+
     return @db.query(q)
 end
 
@@ -2663,6 +2718,14 @@ def get_league_player_schema(data, isUpdate=false)
     pred['LeagueId'] = @leagueId
     pred['CreatedDate'] = createdDate
     pred['ModifiedDate'] = modifiedDate
+
+    if isUpdate
+        pred.delete('GameId')
+        pred.delete('TeamId')
+        pred.delete('PlayerId')
+        pred.delete('LeagueId')
+        pred.delete('CreatedDate')
+    end
 
     return pred
 end
