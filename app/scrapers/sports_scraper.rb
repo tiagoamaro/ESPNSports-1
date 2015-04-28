@@ -145,7 +145,7 @@ def initialize(league, task_logger)
     }
 
     @entrypoints['NBA'] = {
-        "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=20150427",
+        "url" =>  "http://scores.espn.go.com/nba/scoreboard?date=" + @datestr,
         "LeagueID" => 10,
         "LeagueName" => "NBA",
         "FriendlyName" => "Basketball",
@@ -1593,188 +1593,177 @@ end
 
 #-----------------------------------------------------------------------------------------------
 def process_football_stats(modData)
-      teams = {}
+    teams = {}
 
-      full_team_stats = modData[1].children[1]
-      if @league == "NFL" then
+    full_team_stats = modData[1].children[1]
+
+    if @league == "NFL" then
         schema = {
-          "passing" => 1,
-          "rushing" => 2,
-          "receiving" => 3,
-          "defense" => 4,
-          "interceptions" => 5,
-          "kick_returns" => 6,
-          "punt_returns" =>7,
-          "kicking" => 8,
-          "punting" => 9
+            "Passing" => 1,
+            "Rushing" => 2,
+            "Receiving" => 3,
+            "Defensive" => 4,
+            "Interceptions" => 5,
+            "Kick Returns" => 6,
+            "Punt Returns" =>7,
+            "Kicking" => 8,
+            "Punting" => 9
         }
-      elsif @league == "NCF" then
+    elsif @league == "NCF" then
         schema = {
-           "passing" => 1,
-           "rushing" => 2,
-           "receving" => 4,
-            "interceptions" => 5,
-            "kick_returns" => 6,
-            "punt_returns" => 7,
-            "kicking" => 8,
-            "punting" =>9
+            "Passing" => 1,
+            "Rushing" => 2,
+            "Receving" => 4,
+            "Interceptions" => 5,
+            "Kick Returns" => 6,
+            "Punt Returns" => 7,
+            "Kicking" => 8,
+            "Punting" =>9
         }
+    end
+    blobs = {}
 
-      end
-       blobs = {}
-
-        ## first value
-        ## will always belong to stats table
-        padding = 2
-       schema.each { |k, v|
-
-            v = v + padding
-            if v then
-              k1 = k.gsub(/_/, " ")
-              new = ""
-              first = k1.scan(/^(\w{1})([\w]+)|\s(\w{1})([\w]+)/).each { |m|
-
-
-                  if m[0] and m[1] then
+    ## first value
+    ## will always belong to stats table
+    padding = 2
+    schema.each { |k, v|
+        v = v + padding
+        if v then
+            k1 = k.gsub(/_/, " ")
+            new = ""
+            k1.scan(/^(\w{1})([\w]+)|\s(\w{1})([\w]+)/).each { |m|
+                if m[0] and m[1] then
                     new += m[0].capitalize + m[1]
-                  end
-                  if m[2] and m[3] then
+                end
+                if m[2] and m[3] then
                     new += m[2].capitalize.to_s + m[3]
-                  end
-              }
-              k1 = new
+                end
+            }
+            k1 = new
 
             blobs[k1] = {}
-              if modData[v] then
-
-
-                blobs[k1]["home"] =  modData[v].children[1]
+            if modData[v] then
+                blobs[k1]["home"]      =  modData[v].children[1]
                 blobs[k1]["home_self"] =  modData[v].children[2]
-                blobs[k1]["away"] =  modData[v + 1].children[1]
+                blobs[k1]["away"]      =  modData[v + 1].children[1]
                 blobs[k1]["away_self"] =  modData[v + 1].children[2]
-              end
-            else
-              ## set empty arrays when nothing is
-              ## found
+            end
+        else
+        ## set empty arrays when nothing is
+        ## found
+        end
+    }
+
+    ## blobs need to match lookups
+    ## for both away and home
+    ## so:
+    #blobs['Passing'] => {home: blob for passing, away:blob for passing }
+    players = {}
+    teams = {}
+    home_stats = {}
+    away_stats = {}
+
+    blobs.each { |lookup|
+        schema.each { |s, n|
+            lookup = s
+            if blobs[lookup] then
+                away = blobs[lookup]['away']
+                home = blobs[lookup]['home']
+
+                home_self = blobs[lookup]['home_self']
+                away_self = blobs[lookup]['away_self']
+
+                if @splitters[lookup] then
+                    @csplitters = @splitters[lookup]
+                else
+                    @csplitters = {}
+                end
+
+                home_players = []
+                away_players = []
+
+                trans = @trans[lookup]
+
+                if home and away then
+                    home_players = self.process_struct_of_data(@espnSchemas[lookup], home, trans, "player")
+                    home_players.each { |player|
+                        players = self.generate_player(players, player, @home_team_id)
+                    }
+
+                    away_players = self.process_struct_of_data(@espnSchemas[lookup], away, trans, "player")
+                    away_players.each { |player|
+                        players = self.generate_player(players, player, @away_team_id)
+                    }
+
+                    h_stats = self.process_struct_of_data(@espnSchemas[lookup], home_self, trans, "team")
+                    h_stats.each { |k, value|
+                        home_stats[k] = value
+                    }
+
+                    a_stats = self.process_struct_of_data(@espnSchemas[lookup], away_self, trans, "team")
+                    a_stats.each { |k, value|
+                        away_stats[k] = value
+                    }
+                end
             end
         }
 
-      ## blobs need to match lookups
-      ## for both away and home
-      ## so:
-      #blobs['Passing'] => {home: blob for passing, away:blob for passing }
-      players = {}
-      teams = {}
-      home_stats = {}
-      away_stats = {}
-      blobs.each { |lookup|
-          lookup = "Passing"
-         if blobs[lookup] then
-           away =  blobs[lookup]['away']
-           home = blobs[lookup]['home']
+        teams[@home_acc] = home_stats
+        teams[@away_acc] = away_stats
+}
 
-            #puts "\n\n\n"
-           home_self = blobs[lookup]['home_self']
-           away_self = blobs[lookup]['away_self']
-            @lookup = lookup
-           if @splitters[lookup] then
-            @csplitters = @splitters[lookup]
-           else
-            @csplitters = {}
-           end
+    ## now get other team stats
+    ## this is found in the
 
-           home_players = []
-           away_players = []
+    ## full data should resemble
+    ## the following
+    ##
+    ##
+    ## Passing 1st down
+    ## Rushing 1st down
+    ## First down from penalty
+    ## 3rd down
+    ##
+    ## first column is start
+    ## second is home
+    ## third is away
+    general = @trans['General']
 
-           trans = @trans[lookup]
-
-            if home and away then
-             home_players = self.process_struct_of_data(@espnSchemas[lookup], home, trans, "player")
-             home_players.each { |player|
-                players = self.generate_player(players, player, @home_team_id)
-             }
-
-            away_players = self.process_struct_of_data(@espnSchemas[lookup], away, trans, "player")
-            away_players.each { |player|
-               players = self.generate_player(players, player, @away_team_id)
-            }
-
-            h_stats = self.process_struct_of_data(@espnSchemas[lookup], home_self, trans, "team")
-
-            a_stats = self.process_struct_of_data(@espnSchemas[lookup], away_self, trans, "team")
-            h_stats.each { |k, value|
-              home_stats[k] = value
-            }
-            a_stats.each { |k, value|
-              away_stats[k] = value
-            }
-            end
-         end
+    full_team_stats.children.each { |fs|
+        team_v = fs.xpath("td")
+        team_variate = team_v.first()
 
 
-
-          teams[@home_acc] = home_stats
-          teams[@away_acc] = away_stats
-      }
-
-      ## now get other team stats
-      ## this is found in the
-
-      ## full data should resemble
-      ## the following
-      ##
-      ##
-      ## Passing 1st down
-      ## Rushing 1st down
-      ## First down from penalty
-      ## 3rd down
-      ##
-      ## first column is start
-      ## second is home
-      ## third is away
-      general = @trans['General']
-
-      full_team_stats.children.each { |fs|
-          team_v = fs.xpath("td")
-          team_variate = team_v.first()
-
-
-          ## heading data
-          ## will not be nested
-          ## while other data will be
-          if not team_variate.class.to_s == 'Nokogiri::XML::Element' then
+        ## heading data
+        ## will not be nested
+        ## while other data will be
+        if not team_variate.class.to_s == 'Nokogiri::XML::Element' then
             if team_variate then
-              stat = team_variate.inner_html
+                stat = team_variate.inner_html
             else
-              next
+                next
             end
-          else
-           if team_variate then
-            stat = team_variate.children[0].inner_html
-           else
-            next
-           end
+        else
+            if team_variate then
+                stat = team_variate.children[0].inner_html
+            else
+                next
+            end
+        end
 
-          end
+        home_s = team_v[1].inner_html
+        away_s = team_v[2].inner_html
 
-
-          home_s = team_v[1].inner_html
-          away_s = team_v[2].inner_html
-          if general[stat] then
+        if general[stat] then
             teams[@home_acc][general[stat]] = home_s
             teams[@away_acc][general[stat]] = away_s
-          end
-      }
+        end
+    }
 
-    #puts players
-
-      ## return a
-      ## unified dataset
-
-      return {
+    return {
         "players" => players,
         "teams" => teams
-      }
+    }
 end
 
 #-----------------------------------------------------------------------------------------------
