@@ -45,6 +45,7 @@ gem 'simple_form'
 group :development, :test do
   gem 'rspec-rails', '~> 3.2.1'
   gem 'shoulda-matchers', '~> 2.8.0', require: false
+  gem 'timecop', require: false
   gem 'spring-commands-rspec', '~> 1.0.4'
   gem 'factory_girl_rails', '~> 4.5.0'
   gem 'database_cleaner', '~> 1.4.1'

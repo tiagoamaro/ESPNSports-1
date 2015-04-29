@@ -131,10 +131,10 @@ end
 class SportsScraper
 
 #-----------------------------------------------------------------------------------------------
-def initialize(league, task_logger)
+def initialize(league, task_logger, scrape_date)
     @entrypoints = {}
 
-    @datestr = self.make_time()
+    @datestr = self.make_time(scrape_date)
     puts "----------------------------------------------------------------------------"
     puts "Current Date: #{@datestr}"
     @task_logger = task_logger
@@ -3097,8 +3097,8 @@ def is_college_league()
 end
 
 #-----------------------------------------------------------------------------------------------
-def make_time()
-    ENV['SCRAPE_DATE'] || Time.zone.now.strftime('%Y%m%d')
+def make_time(scrape_date)
+    scrape_date.strftime('%Y%m%d')
 end
 
 #-----------------------------------------------------------------------------------------------
