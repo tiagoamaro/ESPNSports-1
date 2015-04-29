@@ -292,7 +292,7 @@ def initialize(league, task_logger)
                 "YDS",
                 "AVG",
                 "TD",
-                "LD"
+                "LG"
             ],
             "Receiving" => [
                 "REC",
@@ -313,13 +313,6 @@ def initialize(league, task_logger)
             ],
             "Interceptions" => [
                 "INT",
-                "YDS",
-                "AVG",
-                "LG",
-                "TD"
-            ],
-            "Returns" => [
-                "NO",
                 "YDS",
                 "AVG",
                 "LG",
@@ -355,41 +348,43 @@ def initialize(league, task_logger)
                 "LG"
             ]
         },
+        "espnTeamSchema" => [
+            ["1st Downs", "FirstDowns"],
+            ["Total Plays", "TotalPlays"]
+        ],
         "trans" => {
             "General" => {
                 "1st Downs" => "FirstDowns",
-                "Passing 1st Downs" => "1st_downs",
-                "Rushing 1st downs" => "1st_downs",
-                "1st downs from penalties" => "",
-                "3rd down from efficiency" => "",
-                "4th down efficiency" => "",
-                "Total Yards" => "",
-                "Turnovers" => "",
-                "Fumbles lost" => "FumblesLost",
-                "Interceptions Thrown" => ""
+                "Total Plays" => "TotalPlays",
+                "Total Yards" => "TotalYards",
+                "Passing" => "TotalPassingYards",
+                "Rushing" => "TotalRushingYards",
+                "Turnovers" => "Turnovers",
+                "Penalties" => "Penalties"
             },
             "Passing" => {
                 "TD" =>  "PassingTDs",
                 "INT" => "PassingInterceptions",
-                "RTG" => "PassingRTG",
-                "SACKS" => "PassingSacks"
+                "RTG" => "PassingRating",
+                "SACKS" => "PassingSacks",
+                "YDS" => "PassingYards"
             },
             "Rushing" => {
+                "CAR" => "RushingAttempts",
                 "TD" => "RushingTDs",
                 "LG" => "RushingLong",
-                "YD" => "RushingYards",
+                "YDS" => "RushingYards",
             },
             "Receiving" => {
                 "REC" => "ReceivingCatches",
-                "YD" => "ReceivingYards",
+                "YDS" => "ReceivingYards",
                 "LG" => "ReceivingLong",
                 "TD" => "ReceivingTDs",
                 "TGTS" => "ReceivingTargets",
             },
             "Defensive" => {
                 "SACKS" => "DefenseSacks",
-                "SOLO" => "DefenseSolos",
-                "TDS" => "DefenseIntTDS",
+                "TD" => "DefenseTDs",
                 "PD" => "DefensePassesDefended",
                 "QB HTS" => "",
                 "TOT" => "DefenseTackles"
@@ -401,24 +396,20 @@ def initialize(league, task_logger)
                 "TD" => "PuntReturnTDs",
                 "LG" => "PuntReturnLong",
                 "YDS" => "PuntReturnYards",
-                "AVG" => "",
-                "TD" => ""
+                "AVG" => ""
             },
             "Kick Returns" => {
                 "NO" => "KickReturns",
-                "FG" => "",
-                "XP" => "",
                 "LG" => "KickReturnLong",
                 "TDS" => "KickReturnTDs",
-                "YDS" => "KickReturnYards",
-                "PTS" => ""
+                "YDS" => "KickReturnYards"
             },
             "Kicking" => {
                 "FG" => "",
                 "PCT" => "",
-                "LONG" => "",
+                "LONG" => "KickingLong",
                 "XP" => "",
-                "PTS" => ""
+                "PTS" => "KickingPoints"
             },
             "Punting" => {
                 "NO" => "Punts",
@@ -427,7 +418,7 @@ def initialize(league, task_logger)
                 "TB" => "",
                 "TB/s" => "",
                 "-20" => "",
-                "LG" => ""
+                "LG" => "PuntLong"
             }
         },
         "splitters" => {
@@ -438,6 +429,13 @@ def initialize(league, task_logger)
                         "KickingFGMade"
                     ],
                 "delimiter" => "/"
+                },
+                "XP" => {
+                    "data" => [
+                        "KickingXPAttempts",
+                        "KickingXPMade"
+                    ],
+                "delimiter" => "/"
                 }
             },
             "Passing" => {
@@ -446,30 +444,30 @@ def initialize(league, task_logger)
                         "PassingCompletions",
                         "PassingAttempts"
                     ],
-                    "delimiter" => "/"
-                    }
+                "delimiter" => "/"
                 }
+            }
+        },
+        "percents" => {
+            "KickingFGPct" => {
+                "lower" => "KickingFGMade",
+                "upper" => "KickingFGAttempted"
             },
-            "percents" => {
-                "KickingFGPct" => {
-                    "lower" => "KickingFGMade",
-                    "upper" => "KickingFGAttempted"
-                },
-                "PassingCompletionPct" => {
-                    "lower" => "PassingCompletions",
-                    "upper" => "PassingAttempts"
-                }
-            },
-            "scorePeriods" => [
-                "Quarter_1",
-                "Quarter_2",
-                "Quarter_3",
-                "Quarter_4",
-                "Overtime_1",
-                "Overtime_2"
-            ],
-            "schema" => {}
-        }
+            "PassingCompletionsPct" => {
+                "lower" => "PassingCompletions",
+                "upper" => "PassingAttempts"
+            }
+        },
+        "scorePeriods" => [
+            "Quarter_1",
+            "Quarter_2",
+            "Quarter_3",
+            "Quarter_4",
+            "Overtime_1",
+            "Overtime_2"
+        ],
+        "schema" => {}
+    }
 
 
     @entrypoints['NCB'] = {
@@ -1592,173 +1590,163 @@ end
     end
 
 #-----------------------------------------------------------------------------------------------
-def process_football_stats(modData)
-    teams = {}
-
-    full_team_stats = modData[1].children[1]
-
-    if @league == "NFL" then
-        schema = {
-            "Passing" => 1,
-            "Rushing" => 2,
-            "Receiving" => 3,
-            "Defensive" => 4,
-            "Interceptions" => 5,
-            "Kick Returns" => 6,
-            "Punt Returns" =>7,
-            "Kicking" => 8,
-            "Punting" => 9
-        }
-    elsif @league == "NCF" then
-        schema = {
-            "Passing" => 1,
-            "Rushing" => 2,
-            "Receving" => 4,
-            "Interceptions" => 5,
-            "Kick Returns" => 6,
-            "Punt Returns" => 7,
-            "Kicking" => 8,
-            "Punting" =>9
-        }
-    end
-    blobs = {}
-
-    ## first value
-    ## will always belong to stats table
-    padding = 2
-    schema.each { |k, v|
-        v = v + padding
-        if v then
-            k1 = k.gsub(/_/, " ")
-            new = ""
-            k1.scan(/^(\w{1})([\w]+)|\s(\w{1})([\w]+)/).each { |m|
-                if m[0] and m[1] then
-                    new += m[0].capitalize + m[1]
-                end
-                if m[2] and m[3] then
-                    new += m[2].capitalize.to_s + m[3]
-                end
-            }
-            k1 = new
-
-            blobs[k1] = {}
-            if modData[v] then
-                blobs[k1]["home"]      =  modData[v].children[1]
-                blobs[k1]["home_self"] =  modData[v].children[2]
-                blobs[k1]["away"]      =  modData[v + 1].children[1]
-                blobs[k1]["away_self"] =  modData[v + 1].children[2]
-            end
-        else
-        ## set empty arrays when nothing is
-        ## found
-        end
-    }
-
-    ## blobs need to match lookups
-    ## for both away and home
-    ## so:
-    #blobs['Passing'] => {home: blob for passing, away:blob for passing }
+def process_football_stats(modData, parser)
     players = {}
     teams = {}
     home_stats = {}
     away_stats = {}
-
-    blobs.each { |lookup|
-        schema.each { |s, n|
-            lookup = s
-            if blobs[lookup] then
-                away = blobs[lookup]['away']
-                home = blobs[lookup]['home']
-
-                home_self = blobs[lookup]['home_self']
-                away_self = blobs[lookup]['away_self']
-
-                if @splitters[lookup] then
-                    @csplitters = @splitters[lookup]
-                else
-                    @csplitters = {}
-                end
-
-                home_players = []
-                away_players = []
-
-                trans = @trans[lookup]
-
-                if home and away then
-                    home_players = self.process_struct_of_data(@espnSchemas[lookup], home, trans, "player")
-                    home_players.each { |player|
-                        players = self.generate_player(players, player, @home_team_id)
-                    }
-
-                    away_players = self.process_struct_of_data(@espnSchemas[lookup], away, trans, "player")
-                    away_players.each { |player|
-                        players = self.generate_player(players, player, @away_team_id)
-                    }
-
-                    h_stats = self.process_struct_of_data(@espnSchemas[lookup], home_self, trans, "team")
-                    h_stats.each { |k, value|
-                        home_stats[k] = value
-                    }
-
-                    a_stats = self.process_struct_of_data(@espnSchemas[lookup], away_self, trans, "team")
-                    a_stats.each { |k, value|
-                        away_stats[k] = value
-                    }
-                end
-            end
+    @csplitters = @splitters
+    general_schema = {
+                "1st Downs" => 0,
+                "Total Plays" => 6,
+                "Total Yards" => 7,
+                "Passing" => 10,
+                "Rushing" => 15,
+                "Penalties" => 19,
+                "Turnovers" => 20
         }
 
-        teams[@home_acc] = home_stats
-        teams[@away_acc] = away_stats
-}
-
-    ## now get other team stats
-    ## this is found in the
-
-    ## full data should resemble
-    ## the following
-    ##
-    ##
-    ## Passing 1st down
-    ## Rushing 1st down
-    ## First down from penalty
-    ## 3rd down
-    ##
-    ## first column is start
-    ## second is home
-    ## third is away
-    general = @trans['General']
-
-    full_team_stats.children.each { |fs|
-        team_v = fs.xpath("td")
-        team_variate = team_v.first()
+    passing_schema = @espnSchemas['Passing']
+    passing_trans  = @trans['Passing']
+    rushing_schema = @espnSchemas['Rushing']
+    rushing_trans  = @trans['Rushing']
+    receiving_schema = @espnSchemas['Receiving']
+    receiving_trans  = @trans['Receiving']
+    defensive_schema = @espnSchemas['Defensive']
+    defensive_trans  = @trans['Defensive']
+    interceptions_schema = @espnSchemas['Interceptions']
+    interceptions_trans  = @trans['Interceptions']
+    kickreturns_schema = @espnSchemas['Kick Returns']
+    kickreturns_trans  = @trans['Kick Returns']
+    puntreturns_schema = @espnSchemas['Punt Returns']
+    puntreturns_trans  = @trans['Punt Returns']
+    kicking_schema = @espnSchemas['Kicking']
+    kicking_trans  = @trans['Kicking']
+    punting_schema = @espnSchemas['Punting']
+    punting_trans  = @trans['Punting']
 
 
-        ## heading data
-        ## will not be nested
-        ## while other data will be
-        if not team_variate.class.to_s == 'Nokogiri::XML::Element' then
-            if team_variate then
-                stat = team_variate.inner_html
-            else
-                next
-            end
-        else
-            if team_variate then
-                stat = team_variate.children[0].inner_html
-            else
-                next
-            end
-        end
+    away_passing = modData[2].children[1]
+    home_passing = modData[3].children[1]
+    away_rushing = modData[4].children[1]
+    home_rushing = modData[5].children[1]
+    away_receiving = modData[6].children[1]
+    home_receiving = modData[7].children[1]
+    away_defensive = modData[8].children[1]
+    home_defensive = modData[9].children[1]
+    away_interceptions = modData[10].children[1]
+    home_interceptions = modData[11].children[1]
+    away_kickreturns = modData[12].children[1]
+    home_kickreturns = modData[13].children[1]
+    away_puntreturns = modData[14].children[1]
+    home_puntreturns = modData[15].children[1]
+    away_kicking = modData[16].children[1]
+    home_kicking = modData[17].children[1]
+    away_punting = modData[18].children[1]
+    home_punting = modData[19].children[1]
 
-        home_s = team_v[1].inner_html
-        away_s = team_v[2].inner_html
 
-        if general[stat] then
-            teams[@home_acc][general[stat]] = home_s
-            teams[@away_acc][general[stat]] = away_s
-        end
+    home_players = self.process_struct_of_data(rushing_schema, home_rushing, rushing_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
     }
+
+    away_players = self.process_struct_of_data(rushing_schema, away_rushing, rushing_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    home_players = self.process_struct_of_data(receiving_schema, home_receiving, receiving_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(receiving_schema, away_receiving, receiving_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    home_players = self.process_struct_of_data(defensive_schema, home_defensive, defensive_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(defensive_schema, away_defensive, defensive_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    home_players = self.process_struct_of_data(interceptions_schema, home_interceptions, interceptions_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(interceptions_schema, away_interceptions, interceptions_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    home_players = self.process_struct_of_data(kickreturns_schema, home_kickreturns, kickreturns_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(kickreturns_schema, away_kickreturns, kickreturns_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    home_players = self.process_struct_of_data(puntreturns_schema, home_puntreturns, puntreturns_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(puntreturns_schema, away_puntreturns, puntreturns_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+
+
+    home_players = self.process_struct_of_data(punting_schema, home_punting, punting_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(punting_schema, away_punting, punting_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    general_schema.each { |k,v|
+        away_stats[k] = modData[1].children[1].children[v].children[1].inner_text
+        home_stats[k] = modData[1].children[1].children[v].children[2].inner_text
+    }
+
+    @csplitters = @splitters['Passing']
+    home_players = self.process_struct_of_data(passing_schema, home_passing, passing_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(passing_schema, away_passing, passing_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+        @csplitters = @splitters['Kicking']
+    home_players = self.process_struct_of_data(kicking_schema, home_kicking, kicking_trans, "player")
+    home_players.each { |k|
+        players = self.generate_player(players, k, @home_team_id)
+    }
+
+    away_players = self.process_struct_of_data(kicking_schema, away_kicking, kicking_trans, "player")
+    away_players.each { |k|
+        players = self.generate_player(players, k, @away_team_id)
+    }
+
+    teams[@home_acc] = home_stats
+    teams[@away_acc] = away_stats
 
     return {
         "players" => players,
@@ -2385,7 +2373,7 @@ end
       end
 
       if @leagueFriendlyName == "Football" then
-          stats = process_football_stats(mod_data)
+          stats = process_football_stats(mod_data, parser)
       end
 
       if @leagueFriendlyName == "Hockey" then
@@ -2614,24 +2602,24 @@ def update_game_player(gameId, player)
 end
 
 #-----------------------------------------------------------------------------------------------
-    def insert_team(team)
-      time = Time.new
-      createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
-      modifiedDate = createdDate
-      q = @dbsyntax.insert_str(@db, self.get_teams_table(), {
-           "TeamId" => team['id'],
-           "TeamPrefix" => team['prefix'],
-           "TeamName" => team['name'],
-           "TeamFullName" => team['fullname'],
-           "ESPNUrl" => team['url'],
-           "LeagueID" => @leagueId,
-           "createdDate" => createdDate,
-           "modifiedDate" => modifiedDate
-      })
+def insert_team(team)
+    time = Time.new
+    createdDate = time.strftime("%Y-%m-%d %H:%M:%S")
+    modifiedDate = createdDate
+    q = @dbsyntax.insert_str(@db, self.get_teams_table(), {
+       "TeamId" => team['id'],
+       "TeamPrefix" => team['prefix'],
+       "TeamName" => team['name'],
+       "TeamFullName" => team['fullname'],
+       "ESPNUrl" => team['url'],
+       "LeagueID" => @leagueId,
+       "createdDate" => createdDate,
+       "modifiedDate" => modifiedDate
+    })
 
-      @task_logger.increment(:records_inserted)
-      return @db.query(q)
-    end
+    @task_logger.increment(:records_inserted)
+    return @db.query(q)
+end
 #-----------------------------------------------------------------------------------------------
 def update_team(team)
     time = Time.new
