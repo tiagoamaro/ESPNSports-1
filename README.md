@@ -1,31 +1,19 @@
-README
-======
+Loading Process
+==================
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Details from start to finish how the program works to retrieve data from ESPN.
 
-Things you may want to cover:
+* Initialize
+    * Based on selection, chooses which league to begin processing.
 
-* Ruby version
-    * 2.1.5
+* Start
+    * Parses the url for the selected league.
 
-* System dependencies
+* Parse_Match
+    * Parses information about the game such as teams and scores.
 
-* Configuration
+* Process_(league)_Stats
+    * Parses team and player stats for each game.
 
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-    * Run `rspec spec`
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
-
-
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+* Insert_Or_Update_Game
+    * Inserts data into the Games table.
