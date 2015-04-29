@@ -1,4 +1,4 @@
 # Scraping Process #
 
 * Initialize
-* * Selects the league to scrape
+   * Selects the league to scrape
