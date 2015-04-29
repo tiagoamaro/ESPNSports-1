@@ -19,14 +19,16 @@ class TaskRunnerService
   end
 
   def run!
-    process = Spawnling.new do
-      @task.running!
+    @task.running!
 
+    process = Spawnling.new do
       while @task.reload.running?
         @task_logger = TaskLog.create(task: @task, start_time: DateTime.now, end_time: DateTime.now, league_name: @task.league_name)
 
         begin
-          @task.scraper.constantize.new(@task.league_name, @task_logger).start
+          prepare_scrape_dates.each do |date|
+            @task.scraper.constantize.new(@task.league_name, @task_logger, date).start
+          end
         rescue => exception
           Rails.logger.info '-------------------'
           Rails.logger.info exception.message
@@ -40,5 +42,11 @@ class TaskRunnerService
     end
 
     @task.update(pid: process.handle)
+  end
+
+  def prepare_scrape_dates
+    current_date_str = ENV['SCRAPE_DATE'] || Time.zone.now.to_s
+    current_date = Time.zone.parse(current_date_str)
+    [current_date, current_date.yesterday]
   end
 end
