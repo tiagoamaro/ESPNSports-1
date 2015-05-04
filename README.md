@@ -9,6 +9,9 @@ Details from start to finish how the program works to retrieve data from ESPN.
 * Start
     * Parses the url for the selected league.
 
+* Configuration
+    * Configure the desired intervals at the `config/initializers/scrape_interval_configuration.rb` file.
+
 * Parse_Match
     * Parses information about the game such as teams and scores.
 
