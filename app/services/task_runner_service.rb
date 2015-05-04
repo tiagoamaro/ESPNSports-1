@@ -1,5 +1,5 @@
 class TaskRunnerService
-  attr_reader :task
+  attr_accessor :task
 
   def initialize(task)
     @task = task
@@ -23,11 +23,13 @@ class TaskRunnerService
 
     process = Spawnling.new do
       while @task.reload.running?
-        @task_logger = TaskLog.create(task: @task, start_time: DateTime.now, end_time: DateTime.now, league_name: @task.league_name)
+        @task_logger = TaskLog.create(task: @task, start_time: Time.zone.now, end_time: Time.zone.now, league_name: @task.league_name)
 
         begin
-          prepare_scrape_dates.each do |date|
-            @task.scraper.constantize.new(@task.league_name, @task_logger, date).start
+          if within_scrape_date_interval?
+            prepare_scrape_dates.each do |date|
+              @task.scraper.constantize.new(@task.league_name, @task_logger, date).start
+            end
           end
         rescue => exception
           Rails.logger.info '-------------------'
@@ -48,5 +50,16 @@ class TaskRunnerService
     current_date_str = ENV['SCRAPE_DATE'] || Time.zone.now.to_s
     current_date = Time.zone.parse(current_date_str)
     [current_date, current_date.yesterday]
+  end
+
+  def within_scrape_date_interval?
+    configured_interval = Rails.configuration.x.scrape_times[@task.league_name]
+    return true unless configured_interval
+
+    start_time   = Time.zone.parse(configured_interval[:start_time])
+    end_time     = Time.zone.parse(configured_interval[:end_time])
+    current_time = Time.zone.now
+
+    start_time <= current_time && current_time <= end_time
   end
 end
